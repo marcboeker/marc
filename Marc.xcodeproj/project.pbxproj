@@ -1,0 +1,554 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4DEC5F13086652A1A2307288 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = F12A7E998B9141082039ACA8 /* Markdown */; };
+		70ECE8F2BB8FE27D580D6643 /* marc in Resources */ = {isa = PBXBuildFile; fileRef = E0E23890D29C647CD223A4E8 /* marc */; };
+		9772E1E398D426BAF8FB9227 /* Demark in Frameworks */ = {isa = PBXBuildFile; productRef = 88B79ABD83571748313F181C /* Demark */; };
+		9CC80CCB79C0313594AFAF69 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 44E3E0436337CE260FF29558 /* Markdown */; };
+		E04B915BF33E15869A68FF5D /* MarkdownEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 95766DFBB283DB7392F96AD1 /* MarkdownEngine */; };
+		A1C0000000000000000000C1 /* cmark-gfm in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0000000000000000000B1 /* cmark-gfm */; };
+		A1C0000000000000000000C2 /* cmark-gfm-extensions in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0000000000000000000B2 /* cmark-gfm-extensions */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D278347931015C12C90F4EF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E97EFBEBCEA4D355159DF998 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C1C7F8FAB8BF12B156A48989;
+			remoteInfo = Marc;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0A590A929DE8418B3F8E5B17 /* MarkdownEngine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MarkdownEngine; path = Packages/MarkdownEngine; sourceTree = SOURCE_ROOT; };
+		401A4B954A55B3C48A07B457 /* Marc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marc.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		75526E690A0D2E6222776F37 /* MarcTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarcTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0E23890D29C647CD223A4E8 /* marc */ = {isa = PBXFileReference; path = marc; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		62622AE7F581F516A5CF7B59 /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		745F7DFC22FA0E37BB27B958 /* Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		190C780AE825963EE0963CAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9CC80CCB79C0313594AFAF69 /* Markdown in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5DC8CFE73B7E1E28F24B0F2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E04B915BF33E15869A68FF5D /* MarkdownEngine in Frameworks */,
+				4DEC5F13086652A1A2307288 /* Markdown in Frameworks */,
+				9772E1E398D426BAF8FB9227 /* Demark in Frameworks */,
+				A1C0000000000000000000C1 /* cmark-gfm in Frameworks */,
+				A1C0000000000000000000C2 /* cmark-gfm-extensions in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0EFCA26ABE02EB17DA8E399C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E0E23890D29C647CD223A4E8 /* marc */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		713046A2A1D450CA7B0BBA67 = {
+			isa = PBXGroup;
+			children = (
+				62622AE7F581F516A5CF7B59 /* App */,
+				D9E5757784ACB16F4FC17EB6 /* Packages */,
+				0EFCA26ABE02EB17DA8E399C /* Resources */,
+				745F7DFC22FA0E37BB27B958 /* Tests */,
+				FB77617BE14FE7F0BDFB7399 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D9E5757784ACB16F4FC17EB6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				0A590A929DE8418B3F8E5B17 /* MarkdownEngine */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		FB77617BE14FE7F0BDFB7399 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				401A4B954A55B3C48A07B457 /* Marc.app */,
+				75526E690A0D2E6222776F37 /* MarcTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C1C7F8FAB8BF12B156A48989 /* Marc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marc" */;
+			buildPhases = (
+				490ED6607584A26FF8AA19B7 /* Sources */,
+				F3C2C55596E95F5405EFAD4F /* Resources */,
+				F5DC8CFE73B7E1E28F24B0F2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				62622AE7F581F516A5CF7B59 /* App */,
+			);
+			name = Marc;
+			packageProductDependencies = (
+				95766DFBB283DB7392F96AD1 /* MarkdownEngine */,
+				F12A7E998B9141082039ACA8 /* Markdown */,
+				88B79ABD83571748313F181C /* Demark */,
+				A1C0000000000000000000B1 /* cmark-gfm */,
+				A1C0000000000000000000B2 /* cmark-gfm-extensions */,
+			);
+			productName = Marc;
+			productReference = 401A4B954A55B3C48A07B457 /* Marc.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F0363BA1AF154D3D2FE3F82B /* MarcTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcTests" */;
+			buildPhases = (
+				D5E53F529866A5877715BA05 /* Sources */,
+				034E066684C1C43BD2343E29 /* Resources */,
+				190C780AE825963EE0963CAE /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				734B455B490AC9D4C986AD47 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				745F7DFC22FA0E37BB27B958 /* Tests */,
+			);
+			name = MarcTests;
+			packageProductDependencies = (
+				44E3E0436337CE260FF29558 /* Markdown */,
+			);
+			productName = MarcTests;
+			productReference = 75526E690A0D2E6222776F37 /* MarcTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E97EFBEBCEA4D355159DF998 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C1C7F8FAB8BF12B156A48989 = {
+						ProvisioningStyle = Manual;
+					};
+					F0363BA1AF154D3D2FE3F82B = {
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marc" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 713046A2A1D450CA7B0BBA67;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B448B4901EE9E46BA6141F0A /* XCRemoteSwiftPackageReference "Demark" */,
+				363863BBC61BA2036642EB2C /* XCRemoteSwiftPackageReference "swift-markdown" */,
+				A1C0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-cmark" */,
+				8B2BF4E110A61BAEC2B361C7 /* XCLocalSwiftPackageReference "Packages/MarkdownEngine" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FB77617BE14FE7F0BDFB7399 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C1C7F8FAB8BF12B156A48989 /* Marc */,
+				F0363BA1AF154D3D2FE3F82B /* MarcTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		034E066684C1C43BD2343E29 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F3C2C55596E95F5405EFAD4F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				70ECE8F2BB8FE27D580D6643 /* marc in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		490ED6607584A26FF8AA19B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D5E53F529866A5877715BA05 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		734B455B490AC9D4C986AD47 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C1C7F8FAB8BF12B156A48989 /* Marc */;
+			targetProxy = D278347931015C12C90F4EF3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1910C260E0C3B9BA45EF1C7F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = dev;
+				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marc;
+				PRODUCT_NAME = Marc;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1919DEF60BE7D45067A5EC1D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marcTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
+			};
+			name = Release;
+		};
+		4F8820DE2BCF6932CE6EB9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marcTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
+			};
+			name = Debug;
+		};
+		5CC4586D336D42BA0541E7A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		9E3EEF1D81DFAC9698A478E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A04C054E391D9B8DBC5F1B8B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = dev;
+				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marc;
+				PRODUCT_NAME = Marc;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A04C054E391D9B8DBC5F1B8B /* Debug */,
+				1910C260E0C3B9BA45EF1C7F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F8820DE2BCF6932CE6EB9CD /* Debug */,
+				1919DEF60BE7D45067A5EC1D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9E3EEF1D81DFAC9698A478E4 /* Debug */,
+				5CC4586D336D42BA0541E7A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8B2BF4E110A61BAEC2B361C7 /* XCLocalSwiftPackageReference "Packages/MarkdownEngine" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MarkdownEngine;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		363863BBC61BA2036642EB2C /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftlang/swift-markdown";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+		B448B4901EE9E46BA6141F0A /* XCRemoteSwiftPackageReference "Demark" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/steipete/Demark";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+		A1C0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-cmark" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftlang/swift-cmark.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		44E3E0436337CE260FF29558 /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 363863BBC61BA2036642EB2C /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		88B79ABD83571748313F181C /* Demark */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B448B4901EE9E46BA6141F0A /* XCRemoteSwiftPackageReference "Demark" */;
+			productName = Demark;
+		};
+		95766DFBB283DB7392F96AD1 /* MarkdownEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkdownEngine;
+		};
+		F12A7E998B9141082039ACA8 /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 363863BBC61BA2036642EB2C /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		A1C0000000000000000000B1 /* cmark-gfm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1C0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-cmark" */;
+			productName = "cmark-gfm";
+		};
+		A1C0000000000000000000B2 /* cmark-gfm-extensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1C0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-cmark" */;
+			productName = "cmark-gfm-extensions";
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E97EFBEBCEA4D355159DF998 /* Project object */;
+}

@@ -1,0 +1,47 @@
+MarkdownEngine (vendored fork for Marc)
+
+Upstream:   https://github.com/nodes-app/swift-markdown-engine
+Commit:     16c2b0c30d8330d35f3a53b6b2e0d4cd03101b00
+Commit date: 2026-09-29 (08:23:06 +02:00)
+Vendored:   2026-09-29
+License:    Apache License 2.0 (see LICENSE). Copyright the upstream authors.
+            This directory contains modified versions of the upstream files.
+
+Removed from upstream: Demo/, Tests/, media/, .github/, .spi.yml, CONTRIBUTING.md,
+the MarkdownEngineCodeBlocks and MarkdownEngineLatex targets (and their
+HighlighterSwift / SwiftMath dependencies). Package.swift lists only MarkdownEngine.
+The upstream test suite (532 tests) passed against the modified sources with all
+new switches at their defaults.
+
+Changes by Marc (all marked with `// Marc:` or in files starting with a Marc comment):
+
+1. NativeTextViewWrapper: new public hooks and init parameters
+   - onTextViewReady: ((NSTextView) -> Void)?   (async on main queue after creation)
+   - onWillPaste: ((NSTextView, NSPasteboard) -> Bool)?
+   - onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)?   (Int = UTF-16 insertion index)
+   - onSaveRequest: ((NSTextView) -> Bool)?   (the `saveDocument:` action)
+2. NativeTextView+PasteHandling: paste(_:) calls onWillPaste first. pasteAsPlainText(_:)
+   (⌥⇧⌘V) is overridden: it inserts the plain-text flavor and bypasses onWillPaste and the
+   engine's HTML conversion. validateUserInterfaceItem accepts saveDocument:.
+3. NativeTextView+FileDrop.swift (new): registers .fileURL drag type, calls onDropFiles
+   from performDragOperation; false falls back to AppKit's default.
+4. NativeTextView+SaveRequest.swift (new): `saveDocument:` responder that calls
+   onSaveRequest, else forwards to the next responder (the NSDocument).
+5. Services/FileImageProvider.swift (new): EmbeddedImageProvider that resolves
+   `![x](relative/path.png)` against a base directory URL (also absolute paths, file: URLs,
+   `<...>` destinations, titles, percent escapes). Set via configuration.services.images.
+6. Configuration/MarkdownEngineFeatures.swift (new): global switches wikiLinks, imageEmbeds,
+   latex, arrowSubstitution (defaults true = upstream behavior). disableNonGFM() turns all off.
+   Used in InlineParser.matchBuiltIn, BlockParser.isBlockLatexOpen, WikiLinkService
+   (display text == raw text when off), MarkdownListHandler (no `[[` completion, no `->` arrow).
+7. Extensions (==highlight==) and directives (@name) are already off by default upstream
+   (empty `configuration.extensions` / `.directives`); Marc registers only StrikethroughExtension.
+8. Key bindings: the engine binds none of the shortcuts Marc uses (checked: it has no
+   key-equivalent or menu code besides ⌘↵ for wiki previews, which is inert with wiki links off).
+   Nothing had to be removed.
+9. NativeTextViewWrapper.updateNSView: configuration.paragraph (line height extra spacing,
+   paragraph spacing) is synced at runtime and triggers a rebuild like a font change.
+   Upstream only applied it in makeNSView.
+10. NativeTextView+FrameAndOverscroll: scrollRangeToVisible uses the engine's explicit reveal in
+   full-width mode too (upstream: reading column only). Native NSTextView reveal does not scroll
+   through the NativeTextViewContainer document view, so arrow keys did not scroll the document.
