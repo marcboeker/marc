@@ -1,0 +1,49 @@
+#!/bin/sh
+# marc — open files in Marc. Missing files are created empty (the folder must exist).
+# An http(s) URL is converted to Markdown and opened as a new untitled document.
+# Options (e.g. -n, -g) go to `open`. With no arguments, just open the app.
+set -eu
+
+# The app that contains this script, not whatever copy Launch Services picks.
+app=$(cd "$(dirname "$(realpath "$0")")/../.." && pwd)
+case $app in
+    *.app) ;;
+    *) app=Marc ;;
+esac
+
+n=$#
+while [ "$n" -gt 0 ]; do
+    arg=$1
+    shift
+    n=$((n - 1))
+    case $arg in
+        -*)
+            set -- "$@" "$arg"
+            ;;
+        http://* | https://*)
+            if [ "$app" = Marc ]; then
+                echo "marc: URLs need the script inside Marc.app" >&2
+                exit 1
+            fi
+            clip=$("$app/Contents/MacOS/Marc" --clip "$arg")
+            set -- "$@" "$clip"
+            ;;
+        *)
+            case $arg in
+                /*) path=$arg ;;
+                *) path=$PWD/$arg ;;
+            esac
+            if [ ! -e "$path" ]; then
+                dir=$(dirname "$path")
+                if [ ! -d "$dir" ]; then
+                    echo "marc: $dir: no such directory" >&2
+                    exit 1
+                fi
+                touch "$path"
+            fi
+            set -- "$@" "$path"
+            ;;
+    esac
+done
+
+exec open -a "$app" "$@"
