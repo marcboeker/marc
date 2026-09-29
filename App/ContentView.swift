@@ -87,6 +87,8 @@ struct ContentView: View {
             vertical: 16
         )
         config.paragraph.lineHeightExtraSpacing = appearance.lineSpacing
+        // A fixed ~2-line slack below the last line; the engine default (25% of the viewport) leaves half a window empty.
+        config.overscroll = OverscrollPolicy(percent: 0, maxPoints: 48, minPoints: 48)
         return config
     }
 }
