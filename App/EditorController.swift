@@ -20,6 +20,7 @@ final class EditorController {
 
     @ObservationIgnored private(set) lazy var lint = LintController(controller: self)
     @ObservationIgnored private(set) lazy var dropPaste = DropPasteHandler(controller: self)
+    @ObservationIgnored private(set) lazy var reloader = FileReloader(controller: self)
 
     /// Exact text of the editor (the text view's string), or the document text before it exists.
     var currentText: String { textView?.string ?? text }

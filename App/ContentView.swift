@@ -47,6 +47,7 @@ struct ContentView: View {
         .background(WindowFrameRestorer())
         .focusedSceneValue(\.editorController, controller)
         .onAppear { sync() }
+        .onDisappear { controller.reloader.stop() }
         .onChange(of: fileURL) {
             sync()
             controller.lint.refresh()   // relative link targets resolve against the new folder
@@ -63,6 +64,7 @@ struct ContentView: View {
     private func sync() {
         controller.fileURL = fileURL
         controller.text = document.text
+        controller.reloader.watch(fileURL, text: document.text)
     }
 
     private func updateScreenWidth() {
