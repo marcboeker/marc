@@ -6,7 +6,7 @@ The simplest possible macOS Markdown editor. The name is "Marc" everywhere (app,
 - macOS 26 only, Swift 6 language mode, Xcode 27.
 - Xcode project (`Marc.xcodeproj`) with SPM dependencies. Folders are synchronized groups, so new files need no project edits.
 - Personal local build. No App Sandbox. No signing beyond "Sign to Run Locally".
-- Bundle id: `net.at6.marc`.
+- Bundle id: `one.m8n.marc`.
 
 ## Layout
 ```

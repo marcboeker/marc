@@ -267,7 +267,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = dev;
-				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marc;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marc;
 				PRODUCT_NAME = Marc;
 				SDKROOT = macosx;
 			};
@@ -284,7 +284,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marcTests;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
 			};
@@ -301,7 +301,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marcTests;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcTests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
 			};
@@ -446,7 +446,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = dev;
-				PRODUCT_BUNDLE_IDENTIFIER = net.at6.marc;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marc;
 				PRODUCT_NAME = Marc;
 				SDKROOT = macosx;
 			};
