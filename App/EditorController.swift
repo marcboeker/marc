@@ -18,6 +18,9 @@ final class EditorController {
     /// It trails the text view by one run-loop turn; use `currentText` for the exact value.
     var text: String = ""
 
+    /// The last merge with the file on disk, shown as a short notice. Nil when none shows.
+    var mergeNotice: MergeNotice?
+
     @ObservationIgnored private(set) lazy var lint = LintController(controller: self)
     @ObservationIgnored private(set) lazy var dropPaste = DropPasteHandler(controller: self)
     @ObservationIgnored private(set) lazy var reloader = FileReloader(controller: self)
@@ -63,6 +66,11 @@ final class EditorController {
             (self?.textView?.window?.windowController?.document as? NSDocument)?.save(nil)
         }
         return true
+    }
+
+    /// Select and show the first merge conflict block, if there is one.
+    func selectFirstConflict() {
+        if let range = Merge.firstConflict(in: currentText) { setSelectedRange(range) }
     }
 
     /// Move the selection; with `scroll` the range is scrolled into view.
