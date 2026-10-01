@@ -40,7 +40,13 @@ enum WebClip {
               let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                   .queryItems?.first(where: { $0.name == "file" })?.value
         else { return }
-        let file = URL(filePath: path)
+        // Only a file that `writeTemporary` made: any web page can open a marc:// URL, and the folder gets deleted.
+        let file = URL(filePath: path).standardizedFileURL.resolvingSymlinksInPath()
+        let folder = file.deletingLastPathComponent()
+        let temporary = FileManager.default.temporaryDirectory.standardizedFileURL.resolvingSymlinksInPath()
+        guard folder.lastPathComponent.hasPrefix("marc-clip-"),
+              folder.deletingLastPathComponent().path == temporary.path
+        else { return }
         defer { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) }
         let controller = NSDocumentController.shared
         do {
