@@ -42,6 +42,23 @@ struct ContentView: View {
                     onSaveRequest: { _ in controller.saveRequested() }
                 )
             }
+            .overlay(alignment: .bottom) {
+                if let notice = controller.mergeNotice {
+                    MergeNoticeView(
+                        notice: notice,
+                        onClick: {
+                            controller.selectFirstConflict()
+                            controller.mergeNotice = nil
+                        },
+                        onTimeout: {
+                            if controller.mergeNotice == notice { controller.mergeNotice = nil }
+                        }
+                    )
+                    .padding(.bottom, 20)
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.25), value: controller.mergeNotice)
         }
         .frame(minWidth: 480, minHeight: 320)
         .background(WindowFrameRestorer())
