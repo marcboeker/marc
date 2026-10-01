@@ -16,10 +16,20 @@ DEBUG_APP   = $(DERIVED)/Build/Products/Debug/Marc.app
 RELEASE_APP = $(DERIVED)/Build/Products/Release/Marc.app
 
 SHELL := /bin/bash
-.PHONY: build run install test clean quit
+.PHONY: build bundle _bundle run install test clean quit
 
 build:
 	$(XCODEBUILD) -configuration Debug build
+
+# Release bundle for one arch: make bundle ARCH=arm64|x86_64 VERSION=1.0.0
+bundle:
+	$(MAKE) DERIVED=.build/dd-$(ARCH) ARCH=$(ARCH) VERSION=$(VERSION) _bundle
+
+_bundle:
+	$(XCODEBUILD) -configuration Release build
+	rm -rf build/$(ARCH)
+	mkdir -p build/$(ARCH)
+	cp -R $(RELEASE_APP) build/$(ARCH)/Marc.app
 
 quit:
 	@osascript -e 'if application "Marc" is running then tell application "Marc" to quit' >/dev/null 2>&1 || true
