@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// One per document window. Owns the feature objects and is the single door to the
-/// window's text view. Reach the key window's controller from menu commands with
+/// One for the main window. Owns the feature objects and is the single door to the window's text view,
+/// which shows the selected file (`file`). Reach the key window's controller from menu commands with
 /// `@FocusedValue(\.editorController)`.
 @MainActor
 @Observable
@@ -11,22 +11,18 @@ final class EditorController {
     /// Its `string` is the raw Markdown, always fresh.
     @ObservationIgnored private(set) weak var textView: NSTextView?
 
+    /// The file the editor shows. Nil in the empty window. Set by ContentView when the selection changes.
+    @ObservationIgnored weak var file: MarcFile?
+
     /// The document's file. Nil for an unsaved document; changes after Save As.
-    var fileURL: URL?
+    var fileURL: URL? { file?.url }
 
-    /// The document text as SwiftUI sees it. Observable, so views can react to edits.
-    /// It trails the text view by one run-loop turn; use `currentText` for the exact value.
-    var text: String = ""
-
-    /// The last merge with the file on disk, shown as a short notice. Nil when none shows.
-    var mergeNotice: MergeNotice?
-
-    @ObservationIgnored private(set) lazy var lint = LintController(controller: self)
+    @ObservationIgnored let lint = LintController()
     @ObservationIgnored private(set) lazy var dropPaste = DropPasteHandler(controller: self)
-    @ObservationIgnored private(set) lazy var reloader = FileReloader(controller: self)
 
-    /// Exact text of the editor (the text view's string), or the document text before it exists.
-    var currentText: String { textView?.string ?? text }
+    /// Exact text of the editor (the text view's string), or the file text before it exists.
+    /// `file.text` trails the text view by one run-loop turn.
+    var currentText: String { textView?.string ?? file?.text ?? "" }
 
     /// Folder of the document, for resolving relative paths. Nil for an unsaved document.
     var documentFolder: URL? { fileURL?.deletingLastPathComponent() }
@@ -63,9 +59,18 @@ final class EditorController {
         // Next run-loop turn: the engine pushes the edited text into the document binding
         // asynchronously, and the save must see it.
         DispatchQueue.main.async { [weak self] in
-            (self?.textView?.window?.windowController?.document as? NSDocument)?.save(nil)
+            self?.file?.save(nil)
         }
         return true
+    }
+
+    /// The editor shows `file` now (the engine has put in its text, scroll position and selection):
+    /// show its lint marks, and catch outside changes made while it was not shown.
+    func fileShown(_ file: MarcFile) {
+        guard self.file === file else { return }
+        lint.show(file)
+        // Clean files took outside changes while hidden; only a waiting question needs the disk again.
+        if file.needsDiskReview { file.reloader.fileChanged() }
     }
 
     /// Select and show the first merge conflict block, if there is one.

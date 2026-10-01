@@ -27,7 +27,7 @@ struct FindCommands: Commands {
 }
 
 extension EditorController {
-    /// Run a find bar action on this window's text view, even when the outline has focus.
+    /// Run a find bar action on this window's text view, even when the sidebar has focus.
     func performFind(_ action: NSTextFinder.Action) {
         guard let textView else { return }
         // NSTextView reads the action from the sender's tag.

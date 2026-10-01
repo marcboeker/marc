@@ -12,10 +12,12 @@ struct MarcApp: App {
     }
 
     var body: some Scene {
-        DocumentGroup(newDocument: MarcDocument()) { file in
-            ContentView(document: file.$document, fileURL: file.fileURL)
+        // One window for all files (OpenFiles). Closing it only hides it; see MainWindow.swift.
+        Window("Marc", id: "main") {
+            ContentView()
         }
         .commands {
+            FileCommands()              // App/FileCommands.swift
             SidebarCommands()           // View > Show/Hide Sidebar, ⌃⌘S
             FontSizeCommands()          // Features/Appearance
             FindCommands()              // Features/Find
@@ -30,12 +32,31 @@ struct MarcApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // One window for all files: no tabs, and no Show Tab Bar / Show All Tabs in the View menu.
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         FontSizeCommands.installEqualsShortcut()
     }
 
-    /// `marc://clip?…` from the `marc` script (see WebClip).
+    /// Files from Finder, the Dock and `open -a Marc`; `marc://clip?…` from the `marc` script (see WebClip).
     func application(_ application: NSApplication, open urls: [URL]) {
-        urls.forEach(WebClip.open)
+        for url in urls {
+            if url.isFileURL { OpenFiles.shared.open(url) } else { WebClip.open(url) }
+        }
+    }
+
+    /// Launch shows the empty window, not a new untitled file.
+    func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool { false }
+
+    /// A single `Window` scene would quit the app when its window closes; Marc stays, like a document app.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// The Dock icon brings back the main window after it was closed.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        if !hasVisibleWindows { OpenFiles.shared.showWindow() }
+        return false
     }
 }

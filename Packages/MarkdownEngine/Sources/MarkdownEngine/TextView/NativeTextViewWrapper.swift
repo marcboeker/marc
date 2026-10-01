@@ -156,6 +156,9 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
     /// Called for the `saveDocument:` action (⌘S / File > Save) while the text view is first responder.
     /// Return `true` if handled; `false` forwards `saveDocument:` down the responder chain (to the NSDocument).
     public var onSaveRequest: ((NSTextView) -> Bool)?
+    /// Called (asynchronously, on the main queue) once the text view shows a document: on the first
+    /// update and after each `documentId` switch, when the document's text, scroll offset and selection are in.
+    public var onDocumentShown: ((String) -> Void)?
 
     public init(
         text: Binding<String>,
@@ -186,7 +189,8 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         onTextViewReady: ((NSTextView) -> Void)? = nil,
         onWillPaste: ((NSTextView, NSPasteboard) -> Bool)? = nil,
         onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)? = nil,
-        onSaveRequest: ((NSTextView) -> Bool)? = nil
+        onSaveRequest: ((NSTextView) -> Bool)? = nil,
+        onDocumentShown: ((String) -> Void)? = nil
     ) {
         self._text = text
         self._isWikiLinkActive = isWikiLinkActive
@@ -217,6 +221,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         self.onWillPaste = onWillPaste
         self.onDropFiles = onDropFiles
         self.onSaveRequest = onSaveRequest
+        self.onDocumentShown = onDocumentShown
     }
 
     public func sizeThatFits(
@@ -437,6 +442,9 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         textView.onWillPaste = onWillPaste
         textView.onDropFiles = onDropFiles
         textView.onSaveRequest = onSaveRequest
+        // Marc: the current binding (the embedder may give each document its own). Pushes already queued
+        // keep the binding of the document they came from.
+        context.coordinator.setTextBinding($text)
 
         let isNodeSwitch = context.coordinator.documentId != documentId
 
@@ -456,10 +464,11 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
                     $0.key == documentId || retained.contains($0.key)
                 }
             }
-            // Evict undo stacks + content snapshots for documents no longer
-            // retained (keep the current one); clear actions before dropping.
+            // Evict undo stacks, content snapshots and selections for documents no
+            // longer retained (keep the current one); clear actions before dropping.
             let staleUndoKeys = Set(context.coordinator.undoManagers.keys)
                 .union(context.coordinator.undoContentSnapshots.keys)
+                .union(context.coordinator.selections.keys)
                 .filter { key in
                     key != documentId && key != "__default__" && !retained.contains(key)
                 }
@@ -467,6 +476,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
                 context.coordinator.undoManagers[key]?.removeAllActions()
                 context.coordinator.undoManagers.removeValue(forKey: key)
                 context.coordinator.undoContentSnapshots.removeValue(forKey: key)
+                context.coordinator.selections.removeValue(forKey: key)
             }
         }
 
@@ -646,9 +656,13 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             }
             // Snapshot the outgoing document's content (storage form) so a later
             // switch-back can detect a file rewritten while it was backgrounded.
-            // `lastSyncedText` still holds the outgoing content here.
+            // Marc: from the synchronous storage, not `lastSyncedText`, which lags an edit
+            // whose push is still queued. Also keep the outgoing selection.
             if let outgoingId = context.coordinator.documentId {
-                context.coordinator.undoContentSnapshots[outgoingId] = context.coordinator.lastSyncedText
+                context.coordinator.undoContentSnapshots[outgoingId] = context.coordinator.configuration.rawSourceMode
+                    ? textView.string
+                    : context.coordinator.lastComputedStorage
+                context.coordinator.selections[outgoingId] = textView.selectedRange()
             }
             // Per-document undo: close the OUTGOING document's open coalescing group
             // (while its manager is still active), then switch the active documentId so
@@ -736,6 +750,18 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
                 }
             } else {
                 context.coordinator.pendingScrollRestoreDocumentId = nil
+            }
+        }
+        // Marc: put the incoming document's selection back (clamped: the text may have changed).
+        if isNodeSwitch, let saved = context.coordinator.selections[documentId] {
+            let length = (textView.string as NSString).length
+            let location = min(saved.location, length)
+            textView.setSelectedRange(NSRange(location: location, length: min(saved.length, length - location)))
+        }
+        if context.coordinator.shownDocumentId != documentId {
+            context.coordinator.shownDocumentId = documentId
+            if let onDocumentShown {
+                DispatchQueue.main.async { onDocumentShown(documentId) }
             }
         }
         // Document rebuilds bypass textDidChange — re-derive emptiness here.
