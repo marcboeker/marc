@@ -9,6 +9,8 @@ import AppKit
 final class FileReloader {
     private unowned let file: MarcFile
     private var isAsking = false
+    /// The newest disk version while the question shows. The answer applies to it, not to the one first asked about.
+    private var pending: Disk?
 
     init(file: MarcFile) {
         self.file = file
@@ -41,6 +43,10 @@ final class FileReloader {
 
     func diskChanged(_ read: Disk?) {
         guard let read else { return }
+        if isAsking {
+            pending = read
+            return
+        }
         let disk = read.text, modified = read.modified
         let editor = editor
         let buffer = editor?.currentText ?? file.text
@@ -98,6 +104,7 @@ final class FileReloader {
     private func ask(_ disk: String, modified: Date?) {
         guard !isAsking, let window = editor?.textView?.window else { return }
         isAsking = true
+        pending = Disk(text: disk, modified: modified)
         let alert = NSAlert()
         alert.messageText = "This file was changed by another program."
         alert.informativeText = "You have unsaved edits. Merge combines them with the new version. Reload discards them."
@@ -108,6 +115,9 @@ final class FileReloader {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 self.isAsking = false
+                guard let latest = self.pending else { return }
+                self.pending = nil
+                let disk = latest.text, modified = latest.modified
                 // The editor moved to another file meanwhile: ask again when this one is shown.
                 guard let editor = self.editor else { return }
                 switch response {
