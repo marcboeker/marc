@@ -24,10 +24,12 @@ final class DropPasteHandler {
         }
 
         let before = textView.string
+        let file = controller.file
         Task { [weak self, weak textView] in
             guard let self else { return }
             let converted = try? await demark.convertToMarkdown(html)
-            guard let textView else { return }
+            // The one text view shows another file now: the paste must not land there.
+            guard let textView, controller.file === file else { return }
             let markdown = converted?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let text = markdown.isEmpty ? (plain ?? "") : markdown
             guard !text.isEmpty else { return }
