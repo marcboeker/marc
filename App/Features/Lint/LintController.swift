@@ -1,45 +1,36 @@
 import AppKit
+import Observation
 
-/// Installed on the text view when the engine has created it. Lints the text
-/// after typing pauses and shows the issues as gutter icons.
+/// Installed on the text view when the engine has created it. Shows the shown file's lint issues
+/// (`MarcFile.lintIssues`, kept up to date by the file) as gutter icons.
 @MainActor
 final class LintController {
-    private unowned let controller: EditorController
-    private var observer: NSObjectProtocol?
-    private var pending: Task<Void, Never>?
     private let gutter = LintGutter()
-
-    /// Quiet time after the last edit before linting.
-    private static let debounce: Duration = .milliseconds(400)
-
-    init(controller: EditorController) {
-        self.controller = controller
-    }
+    /// Bumped by `show` and `clear`, so the observation of a file no longer shown stops.
+    private var generation = 0
 
     func install(on textView: NSTextView) {
         gutter.attach(to: textView)
-        if let observer { NotificationCenter.default.removeObserver(observer) }
-        observer = NotificationCenter.default.addObserver(
-            forName: NSText.didChangeNotification, object: textView, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.textDidChange() }
-        }
-        textDidChange()
     }
 
-    /// Lint again without an edit, e.g. after Save As moved the document to another folder.
-    func refresh() { textDidChange() }
+    /// The editor shows another file: drop the old marks now; `show(_:)` brings the file's own.
+    func clear() {
+        generation &+= 1
+        gutter.show([])
+    }
 
-    private func textDidChange() {
-        pending?.cancel()
-        // A newer edit cancels this task, during the sleep or while the lint runs.
-        pending = Task { [weak self] in
-            try? await Task.sleep(for: Self.debounce)
-            guard !Task.isCancelled, let self else { return }
-            let text = controller.currentText, folder = controller.documentFolder
-            let issues = await Task.detached { Marc.lint(text, documentFolder: folder) }.value
-            guard !Task.isCancelled else { return }
-            gutter.show(issues)
+    /// The editor shows `file` (its text is in the text view): show its issues, and again each time they change.
+    func show(_ file: MarcFile) {
+        generation &+= 1
+        track(file, generation: generation)
+    }
+
+    private func track(_ file: MarcFile, generation: Int) {
+        guard generation == self.generation else { return }
+        let issues = withObservationTracking { file.lintIssues } onChange: { [weak self] in
+            // Called before the change; read the new value a turn later.
+            DispatchQueue.main.async { self?.track(file, generation: generation) }
         }
+        gutter.show(issues)
     }
 }

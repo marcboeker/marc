@@ -4,7 +4,7 @@ import Foundation
 enum ReloadAction: Equatable {
     case ignore
     case reload
-    /// The buffer has unsaved edits: let the user choose.
+    /// The buffer has unsaved edits: let the user choose (when the file is shown).
     case ask
 }
 
@@ -15,6 +15,7 @@ enum ReloadPolicy {
     ///   - lastKnownDisk: the file's text when we last read or wrote it.
     static func action(disk: String, buffer: String, lastKnownDisk: String) -> ReloadAction {
         if disk == buffer || disk == lastKnownDisk { return .ignore }   // our own save, or a touch
-        return buffer == lastKnownDisk ? .reload : .ask
+        if buffer == lastKnownDisk { return .reload }
+        return .ask
     }
 }

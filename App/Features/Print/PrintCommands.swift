@@ -39,13 +39,7 @@ extension EditorController {
         }
     }
 
-    /// The file name without extension, or the display name of a new document ("Untitled").
-    /// Not `displayName` minus extension: with a hidden extension, "Notes 1.2" would lose ".2".
-    private var documentTitle: String {
-        if let fileURL { return fileURL.deletingPathExtension().lastPathComponent }
-        let document = textView?.window?.windowController?.document as? NSDocument
-        return document?.displayName ?? "Untitled"
-    }
+    private var documentTitle: String { file?.title ?? "Untitled" }
 
     func startPrintJob(_ output: PrintJob.Output) {
         let family = AppearanceSettings.shared.fontFamily

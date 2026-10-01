@@ -91,11 +91,7 @@ extension NativeTextViewCoordinator {
             pendingEditedRange = nil
             guard !tv.hasMarkedText() else { return }
             if tv.string != lastSyncedText {
-                let rawText = tv.string
-                DispatchQueue.main.async {
-                    self.lastSyncedText = rawText
-                    self.text = rawText
-                }
+                scheduleTextPush(tv.string)
             }
             if let bottomTextView = tv as? NativeTextView,
                let scrollView = tv.enclosingScrollView {
@@ -196,10 +192,7 @@ extension NativeTextViewCoordinator {
             }
 #endif
             if storageState.storage != self.lastSyncedText {
-                DispatchQueue.main.async {
-                    self.lastSyncedText = storageState.storage
-                    self.text = storageState.storage
-                }
+                scheduleTextPush(storageState.storage)
             }
         }
 

@@ -1,98 +1,102 @@
 import AppKit
 
-/// Reloads the editor when another process changes the document's file.
-/// SwiftUI's `DocumentGroup` does not do this; its NSDocument keeps the old text and a later save overwrites the outside change.
-/// A clean buffer is replaced quietly (undo history cleared, cursor kept). A buffer with unsaved edits asks first:
-/// merge, keep the edits, or reload.
+/// Reloads a file when another process changes it. One per open file; `MarcFile.presentedItemDidChange` calls it.
+/// Shown in the editor: a clean buffer is replaced quietly (undo history cleared, cursor kept); a buffer with
+/// unsaved edits asks first: merge, keep the edits, or reload.
+/// Not shown: a clean file takes the disk text quietly; a file with unsaved edits gets `needsDiskReview`,
+/// and the question comes when it is shown (`EditorController.fileShown`).
 @MainActor
-final class FileReloader: NSObject, NSFilePresenter {
-    nonisolated let presentedItemOperationQueue = OperationQueue.main
-    nonisolated(unsafe) private var url: URL?
-    nonisolated var presentedItemURL: URL? { url }
-
-    private weak var controller: EditorController?
-    /// The file's text when we last read or wrote it. A buffer equal to this has no unsaved edits.
-    private var lastKnownDisk = ""
+final class FileReloader {
+    private unowned let file: MarcFile
     private var isAsking = false
 
-    init(controller: EditorController) {
-        self.controller = controller
+    init(file: MarcFile) {
+        self.file = file
     }
 
-    /// Start (or move) watching. `text` is what the file holds right now.
-    func watch(_ url: URL?, text: String) {
-        lastKnownDisk = text
-        guard url != self.url else { return }
-        stop()
-        guard let url else { return }
-        self.url = url
-        NSFileCoordinator.addFilePresenter(self)
+    /// The editor, when it shows this file.
+    private var editor: EditorController? {
+        guard let editor = OpenFiles.shared.editor, editor.file === file, editor.textView != nil else { return nil }
+        return editor
     }
 
-    /// The file coordinator retains its presenters, so this must run when the window closes.
-    func stop() {
-        guard url != nil else { return }
-        NSFileCoordinator.removeFilePresenter(self)
-        url = nil
-    }
-
-    nonisolated func presentedItemDidChange() {
-        MainActor.assumeIsolated { fileChanged() }
-    }
-
-    private func fileChanged() {
-        guard let controller, let url else { return }
+    /// The file's text and modification date now. Nil when it is gone or mid-save: keep the old text, the next change retries.
+    nonisolated static func read(_ url: URL) -> Disk? {
         // Date first: if the file changes between the two reads, the date is the older one and NSDocument still warns.
         let modified = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        guard let data = try? Data(contentsOf: url),        // gone or mid-save: keep the old text, the next change retries
-              let disk = String(data: data, encoding: .utf8)
-        else { return }
-        switch ReloadPolicy.action(disk: disk, buffer: controller.currentText, lastKnownDisk: lastKnownDisk) {
-        case .ignore: lastKnownDisk = disk
-        case .reload: reload(disk, modified: modified)
-        case .ask: ask(disk, modified: modified)
+        guard let data = try? Data(contentsOf: url), let text = String(data: data, encoding: .utf8) else { return nil }
+        return Disk(text: text, modified: modified)
+    }
+
+    struct Disk: Sendable {
+        let text: String
+        let modified: Date?
+    }
+
+    /// Read the file now and compare.
+    func fileChanged() {
+        guard let url = file.fileURL else { return }
+        diskChanged(Self.read(url))
+    }
+
+    func diskChanged(_ read: Disk?) {
+        guard let read else { return }
+        let disk = read.text, modified = read.modified
+        let editor = editor
+        let buffer = editor?.currentText ?? file.text
+        switch ReloadPolicy.action(disk: disk, buffer: buffer, lastKnownDisk: file.lastKnownDisk) {
+        case .ignore:
+            file.lastKnownDisk = disk
+            file.needsDiskReview = false
+        case .reload:
+            if let editor {
+                reload(disk, modified: modified, in: editor)
+            } else {
+                file.takeDiskText(disk)
+                accept(disk, modified: modified)
+            }
+        case .ask:
+            file.needsDiskReview = true
+            ask(disk, modified: modified)   // not shown: no window to ask in, the question waits
         }
     }
 
-    private func reload(_ disk: String, modified: Date?) {
-        guard let controller, let textView = controller.textView else { return }
-        let selection = controller.selectedRange
+    private func reload(_ disk: String, modified: Date?, in editor: EditorController) {
+        guard let textView = editor.textView else { return }
+        let selection = editor.selectedRange
         let whole = NSRange(location: 0, length: (textView.string as NSString).length)
-        guard controller.replace(whole, with: disk) else { return }
-        controller.setSelectedRange(selection, scroll: false)   // clamped to the new length
+        guard editor.replace(whole, with: disk) else { return }
+        editor.setSelectedRange(selection, scroll: false)   // clamped to the new length
         textView.undoManager?.removeAllActions()
         accept(disk, modified: modified)
-        // The engine pushes the text into the document binding a turn later; clear the edited mark after that.
-        DispatchQueue.main.async { [weak self] in
-            DispatchQueue.main.async { self?.document?.updateChangeCount(.changeCleared) }
+        // The engine pushes the text into the file a turn later; clear the edited mark after that.
+        DispatchQueue.main.async { [file] in
+            DispatchQueue.main.async { file.updateChangeCount(.changeCleared) }
         }
     }
 
     /// Merge the outside change into the buffer as one undoable edit. The buffer stays unsaved, so the user checks it first.
-    private func merge(_ disk: String, modified: Date?) {
-        guard let controller, let textView = controller.textView else { return }
-        let result = Merge.merge(base: lastKnownDisk, mine: controller.currentText, theirs: disk)
-        let selection = controller.selectedRange
+    private func merge(_ disk: String, modified: Date?, in editor: EditorController) {
+        guard let textView = editor.textView else { return }
+        let result = Merge.merge(base: file.lastKnownDisk, mine: editor.currentText, theirs: disk)
+        let selection = editor.selectedRange
         let whole = NSRange(location: 0, length: (textView.string as NSString).length)
-        guard controller.replace(whole, with: result.text, actionName: "Merge") else { return }
-        controller.setSelectedRange(selection, scroll: false)   // clamped to the new length
+        guard editor.replace(whole, with: result.text, actionName: "Merge") else { return }
+        editor.setSelectedRange(selection, scroll: false)   // clamped to the new length
         accept(disk, modified: modified)
-        controller.mergeNotice = MergeNotice(conflicts: result.conflicts)
+        file.mergeNotice = MergeNotice(conflicts: result.conflicts)
     }
 
     /// The buffer now builds on this disk version. NSDocument compares the file's modification date with its own
     /// before each save and shows "changed by another application" when they differ; tell it that we have this version.
     private func accept(_ disk: String, modified: Date?) {
-        lastKnownDisk = disk
-        if let modified { document?.fileModificationDate = modified }
-    }
-
-    private var document: NSDocument? {
-        controller?.textView?.window?.windowController?.document as? NSDocument
+        file.lastKnownDisk = disk
+        file.needsDiskReview = false
+        if let modified { file.fileModificationDate = modified }
     }
 
     private func ask(_ disk: String, modified: Date?) {
-        guard !isAsking, let window = controller?.textView?.window else { return }
+        guard !isAsking, let window = editor?.textView?.window else { return }
         isAsking = true
         let alert = NSAlert()
         alert.messageText = "This file was changed by another program."
@@ -104,10 +108,12 @@ final class FileReloader: NSObject, NSFilePresenter {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 self.isAsking = false
+                // The editor moved to another file meanwhile: ask again when this one is shown.
+                guard let editor = self.editor else { return }
                 switch response {
-                case .alertFirstButtonReturn: self.merge(disk, modified: modified)
-                case .alertThirdButtonReturn: self.reload(disk, modified: modified)
-                default: self.lastKnownDisk = disk   // ask again only for the next outside change
+                case .alertFirstButtonReturn: self.merge(disk, modified: modified, in: editor)
+                case .alertThirdButtonReturn: self.reload(disk, modified: modified, in: editor)
+                default: self.accept(disk, modified: modified)   // ask again only for the next outside change
                 }
             }
         }

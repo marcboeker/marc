@@ -44,6 +44,10 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
     /// switch-back a mismatch means the file was rewritten while backgrounded, so
     /// the now-stale undo stack is dropped. Pruned alongside `undoManagers`.
     var undoContentSnapshots: [String: String] = [:]
+    // Marc: per-document selection, saved on switch-away and restored on switch-back. Pruned alongside `undoManagers`.
+    var selections: [String: NSRange] = [:]
+    /// The document `onDocumentShown` last reported.
+    var shownDocumentId: String?
     @Binding var text: String
     @Binding var isWikiLinkActive: Bool
     var fontName: String
@@ -301,6 +305,23 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
         super.init()
         // Init + didSet share this helper so the observer tracks whichever service is current.
         subscribeToAppearanceNotification()
+    }
+
+    // Marc: the text binding follows the wrapper, so an embedder can hand each document its own binding.
+    /// Called on every `updateNSView` with the wrapper's current binding.
+    func setTextBinding(_ binding: Binding<String>) {
+        _text = binding
+    }
+
+    /// Push an edit (storage form) into the text binding a turn later: SwiftUI forbids writes during its
+    /// update pass. The push goes to the binding of the document that made the edit, also when the
+    /// embedder switched documents in between.
+    func scheduleTextPush(_ storage: String) {
+        let binding = $text, documentId = self.documentId
+        DispatchQueue.main.async {
+            if self.documentId == documentId { self.lastSyncedText = storage }
+            binding.wrappedValue = storage
+        }
     }
 
     /// (Re)register the syntax-highlighter appearance observer; idempotent and unsubscribes on nil.

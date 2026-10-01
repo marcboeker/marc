@@ -1,20 +1,18 @@
 import SwiftUI
 
-/// Sidebar with the document's headings. Click a heading to jump to it.
-struct OutlineView: View {
+/// Sidebar section with the shown file's headings. Click a heading to jump to it.
+struct OutlineSection: View {
     let controller: EditorController
-    @State private var items: [OutlineItem] = []
-    @State private var loaded = false
+    let file: MarcFile
 
     var body: some View {
-        Group {
-            if items.isEmpty {
+        Section("Outline") {
+            if file.outline.isEmpty {
                 Text("No headings")
-                    .font(.callout)
                     .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .selectionDisabled()
             } else {
-                List(items) { item in
+                ForEach(file.outline) { item in
                     Button {
                         controller.setSelectedRange(NSRange(location: item.range.location, length: 0))
                     } label: {
@@ -25,18 +23,10 @@ struct OutlineView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .selectionDisabled()
                 }
             }
         }
-        .task(id: controller.text) {
-            // Debounce: a newer edit cancels this task. The first load does not wait.
-            if loaded { try? await Task.sleep(for: .milliseconds(200)) }
-            guard !Task.isCancelled else { return }
-            let text = controller.text
-            let headings = await Task.detached { outline(of: text) }.value
-            guard !Task.isCancelled else { return }
-            loaded = true
-            if headings != items { items = headings }
-        }
     }
 }
+

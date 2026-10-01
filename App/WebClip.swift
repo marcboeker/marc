@@ -48,8 +48,7 @@ enum WebClip {
             let document = try controller.makeDocument(for: nil, withContentsOf: file, ofType: UTType.markdown.identifier)
             document.displayName = file.deletingPathExtension().lastPathComponent
             controller.addDocument(document)
-            document.makeWindowControllers()
-            document.showWindows()
+            document.showWindows()   // MarcFile: adds it to OpenFiles and selects it
         } catch {
             NSApp.presentError(error)
         }
