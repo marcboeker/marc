@@ -536,7 +536,10 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             context.coordinator.configuration.rawSourceMode = configuration.rawSourceMode
             textView.configuration.rawSourceMode = configuration.rawSourceMode
             textView.breakUndoCoalescing()
-            context.coordinator.undoManagers[documentId]?.removeAllActions()
+            // Marc: without wiki links both modes show the same text, so undo stays valid.
+            if MarkdownEngineFeatures.wikiLinks {
+                context.coordinator.undoManagers[documentId]?.removeAllActions()
+            }
             context.coordinator.didInitialFormatting = false
             // isWikiLinkActive is a SwiftUI binding — defer off the update pass
             // to avoid "Modifying state during view update".

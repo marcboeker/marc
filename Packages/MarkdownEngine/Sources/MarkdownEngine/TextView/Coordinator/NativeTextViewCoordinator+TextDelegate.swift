@@ -85,14 +85,18 @@ extension NativeTextViewCoordinator {
         pendingScrollRestoreDocumentId = nil
         // Before the early returns: the first keystroke must hide the placeholder.
         (tv as? NativeTextView)?.refreshPlaceholderVisibility()
-        // Raw mode: display IS storage — sync the binding, skip the restyle.
+        // Raw mode: display IS storage — sync the binding, re-highlight the edited lines.
         if configuration.rawSourceMode {
+            let editedRange = pendingEditedRange ?? tv.textStorage?.editedRange
+            let singleTrackedEdit = pendingEditCount == 1
             pendingEditCount = 0
             pendingEditedRange = nil
             guard !tv.hasMarkedText() else { return }
-            if tv.string != lastSyncedText {
-                scheduleTextPush(tv.string)
+            let docString = tv.string
+            if docString != lastSyncedText {
+                scheduleTextPush(docString)
             }
+            highlightRawSource(tv, text: docString, editedRange: editedRange, trusted: singleTrackedEdit)
             if let bottomTextView = tv as? NativeTextView,
                let scrollView = tv.enclosingScrollView {
                 bottomTextView.recalcOverscroll(for: scrollView, debugTag: "textDidChange")
@@ -781,7 +785,7 @@ extension NativeTextViewCoordinator {
     /// the contribution of runs it touches. `previousBacktickCount` minus the
     /// pre-edit window count (captured in shouldChangeTextIn) plus the
     /// post-edit window count is exact. Any doubt → full scan.
-    private func incrementalBacktickCensus(fullText: NSString, editedRange: NSRange,
+    func incrementalBacktickCensus(fullText: NSString, editedRange: NSRange,
                                            lengthDelta: Int, trusted: Bool) -> Int {
         defer { pendingBacktickWindow = nil }
         guard trusted, !backtickCensusNeedsRescan,

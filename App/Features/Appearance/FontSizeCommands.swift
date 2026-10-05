@@ -1,12 +1,17 @@
 import AppKit
 import SwiftUI
 
-/// View > Bigger (⌘+), Smaller (⌘−), Default Size. No ⌘0: that is Format > Paragraph.
+/// View > Show Markdown Source (⌥⌘U, as View Source in Safari), Bigger (⌘+), Smaller (⌘−), Default Size.
+/// No ⌘0: that is Format > Paragraph.
 struct FontSizeCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .toolbar) {
-            let settings = AppearanceSettings.shared
+            @Bindable var settings = AppearanceSettings.shared
             let range = AppearanceSettings.fontSizeRange
+            Section {
+                Toggle("Show Markdown Source", isOn: $settings.showsMarkdownSource)
+                    .keyboardShortcut("u", modifiers: [.command, .option])
+            }
             Section {
                 Button("Bigger") { settings.stepFontSize(by: 1) }
                     .keyboardShortcut("+")

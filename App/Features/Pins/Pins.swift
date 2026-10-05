@@ -43,7 +43,7 @@ final class Pins {
 
     /// The same file gives the same key, also through symlinks (`/var` and `/private/var`).
     static func key(_ url: URL) -> URL {
-        url.resolvingSymlinksInPath().standardizedFileURL
+        url.resolvedFileURL
     }
 
     func pin(for url: URL) -> Pin? {
@@ -72,7 +72,8 @@ final class Pins {
     /// Follows renames and moves, and renews a stale bookmark.
     func resolve(_ pin: Pin) -> URL? {
         guard let index = items.firstIndex(where: { $0.id == pin.id }) else { return nil }
-        guard let (url, stale) = Self.resolve(items[index].bookmark), FileManager.default.fileExists(atPath: url.path) else {
+        guard let (url, stale) = Self.resolve(items[index].bookmark), FileManager.default.fileExists(atPath: url.path),
+              !Self.isInTrash(url) else {
             unpin(pin)
             return nil
         }
@@ -88,6 +89,14 @@ final class Pins {
         guard let index = items.firstIndex(where: { Self.key($0.url) == oldKey }),
               let (url, stale) = Self.resolve(items[index].bookmark), Self.key(url) == Self.key(new) else { return }
         update(index, url: new, renew: stale)
+    }
+
+    /// A bookmark follows a file into the Trash; for the user that file is gone.
+    private static func isInTrash(_ url: URL) -> Bool {
+        guard let trash = try? FileManager.default.url(for: .trashDirectory, in: .userDomainMask, appropriateFor: url, create: false)
+        else { return false }
+        let root = trash.resolvedFileURL.path(percentEncoded: false)
+        return url.resolvedFileURL.path(percentEncoded: false).hasPrefix(root.hasSuffix("/") ? root : root + "/")
     }
 
     private static func resolve(_ bookmark: Data) -> (url: URL, stale: Bool)? {

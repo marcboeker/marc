@@ -68,8 +68,9 @@ enum FormatCommand: Hashable {
 
 extension EditorController {
     /// Apply a Format command as one undo step, replacing only the changed range.
+    /// Not while the preview replaces the editor: the edit would be out of sight.
     func apply(_ command: FormatCommand) {
-        guard let textView else { return }
+        guard let textView, !editorIsHidden else { return }
         let old = TextEdit(text: textView.string, selection: textView.selectedRange())
         let result = command.perform(on: old, pasteboardURL: command == .link ? Self.pasteboardURL() : nil)
         if let change = MarkdownEdits.replacement(from: old.text, to: result.text) {
@@ -117,6 +118,6 @@ struct FormatCommands: Commands {
     private func item(_ command: FormatCommand) -> some View {
         Button(command.title) { controller?.apply(command) }
             .keyboardShortcut(command.shortcut.key, modifiers: command.shortcut.modifiers)
-            .disabled(controller == nil)
+            .disabled(controller?.editorIsHidden ?? true)
     }
 }

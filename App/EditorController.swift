@@ -19,6 +19,15 @@ final class EditorController {
 
     @ObservationIgnored let lint = LintController()
     @ObservationIgnored private(set) lazy var dropPaste = DropPasteHandler(controller: self)
+    @ObservationIgnored private(set) lazy var preview = PreviewController(editor: self)
+
+    /// Editor, preview in its place, or both side by side. For the window, so it stays when the file
+    /// changes; not saved. Change it with `togglePreview`.
+    private(set) var previewMode = PreviewMode.editor
+
+    /// The preview replaces the editor: the text view is out of sight and takes no user input (no keys,
+    /// clicks, drops, Format or Find). It stays editable, so Marc's own edits still go in.
+    var editorIsHidden: Bool { previewMode == .overlay }
 
     /// Exact text of the editor (the text view's string), or the file text before it exists.
     /// `file.text` trails the text view by one run-loop turn.
@@ -34,7 +43,8 @@ final class EditorController {
         self.textView = textView
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
-        textView.window?.makeFirstResponder(textView)
+        if !editorIsHidden { textView.window?.makeFirstResponder(textView) }
+        updateDropTypes()
         lint.install(on: textView)
     }
 
@@ -42,7 +52,8 @@ final class EditorController {
     /// so the engine restyles and updates the binding. False when the text view refuses.
     @discardableResult
     func replace(_ range: NSRange, with text: String, actionName: String? = nil) -> Bool {
-        guard let textView, textView.shouldChangeText(in: range, replacementString: text),
+        guard let textView else { return false }
+        guard textView.shouldChangeText(in: range, replacementString: text),
               let storage = textView.textStorage
         else { return false }
         storage.replaceCharacters(in: range, with: text)
@@ -69,6 +80,7 @@ final class EditorController {
     func fileShown(_ file: MarcFile) {
         guard self.file === file else { return }
         lint.show(file)
+        preview.fileShown()
         // Clean files took outside changes while hidden; only a waiting question needs the disk again.
         if file.needsDiskReview { file.reloader.fileChanged() }
     }
@@ -78,7 +90,8 @@ final class EditorController {
         if let range = Merge.firstConflict(in: currentText) { setSelectedRange(range) }
     }
 
-    /// Move the selection; with `scroll` the range is scrolled into view.
+    /// Move the selection; with `scroll` the range is scrolled into view. While the preview replaces
+    /// the editor, the preview scrolls to it and keeps the keys.
     func setSelectedRange(_ range: NSRange, scroll: Bool = true) {
         guard let textView else { return }
         let length = (textView.string as NSString).length
@@ -86,7 +99,40 @@ final class EditorController {
         let clamped = NSRange(location: location, length: min(max(range.length, 0), length - location))
         textView.setSelectedRange(clamped)
         if scroll { textView.scrollRangeToVisible(clamped) }
-        textView.window?.makeFirstResponder(textView)
+        if editorIsHidden {
+            if scroll { preview.scrollToCursor() }
+        } else {
+            textView.window?.makeFirstResponder(textView)
+        }
+    }
+
+    func focusTextView() {
+        textView?.window?.makeFirstResponder(textView)
+    }
+
+    /// View > Preview (`.overlay`) and View > Side by Side (`.split`): the same item again goes back to the editor.
+    /// Under the overlay the hidden editor takes no user input: it has no clicks (ContentView), no keys,
+    /// no drops, and Undo, Paste, Format and Find do not reach it. Its text, undo, selection and scroll stay.
+    func togglePreview(_ mode: PreviewMode) {
+        previewMode = previewMode.toggled(mode)
+        // Not the text view and not its find bar: either would keep the keys.
+        if editorIsHidden, let textView, let window = textView.window, let scrollView = textView.enclosingScrollView,
+           let responder = window.firstResponder as? NSView, responder.isDescendant(of: scrollView) {
+            window.makeFirstResponder(nil)
+        }
+        updateDropTypes()
+        preview.modeChanged(to: previewMode)
+    }
+
+    /// The web view over the hidden editor takes no drops, so they fall through to the text view:
+    /// under the overlay it takes none. AppKit registers the types again only when `isEditable` changes.
+    private func updateDropTypes() {
+        guard let textView else { return }
+        if editorIsHidden {
+            textView.unregisterDraggedTypes()
+        } else {
+            textView.registerForDraggedTypes(textView.acceptableDragTypes)
+        }
     }
 }
 

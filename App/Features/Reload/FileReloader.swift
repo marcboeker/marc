@@ -38,7 +38,13 @@ final class FileReloader {
     /// Read the file now and compare.
     func fileChanged() {
         guard let url = file.fileURL else { return }
-        diskChanged(Self.read(url))
+        guard let read = Self.read(url) else {
+            // Gone: there is no disk version to review against, and the buffer is the only copy.
+            // Without this the file could never close or autosave again.
+            if !FileManager.default.fileExists(atPath: url.path) { file.needsDiskReview = false }
+            return
+        }
+        diskChanged(read)
     }
 
     func diskChanged(_ read: Disk?) {

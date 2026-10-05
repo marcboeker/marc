@@ -148,8 +148,9 @@ final class OpenFiles {
         // An outside change waits for merge / keep / reload, which shows when the file is shown.
         // Closing now would save over it; the user closes again after answering.
         if file.needsDiskReview {
-            selectedID = file.id
-            return false
+            // Shown already: no `fileShown` comes, so check the disk (and ask) now.
+            if selectedID == file.id { file.reloader.fileChanged() } else { selectedID = file.id }
+            if file.needsDiskReview { return false }
         }
         // The question is about this file's text: show it.
         if file.asksBeforeClosing { selectedID = file.id }

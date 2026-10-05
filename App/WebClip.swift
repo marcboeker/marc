@@ -41,9 +41,9 @@ enum WebClip {
                   .queryItems?.first(where: { $0.name == "file" })?.value
         else { return }
         // Only a file that `writeTemporary` made: any web page can open a marc:// URL, and the folder gets deleted.
-        let file = URL(filePath: path).standardizedFileURL.resolvingSymlinksInPath()
+        let file = URL(filePath: path).resolvedFileURL
         let folder = file.deletingLastPathComponent()
-        let temporary = FileManager.default.temporaryDirectory.standardizedFileURL.resolvingSymlinksInPath()
+        let temporary = FileManager.default.temporaryDirectory.resolvedFileURL
         guard folder.lastPathComponent.hasPrefix("marc-clip-"),
               folder.deletingLastPathComponent().path == temporary.path
         else { return }
