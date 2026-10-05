@@ -9,10 +9,19 @@ import SwiftUI
 final class OpenFiles {
     static let shared = OpenFiles()
 
+    /// The pinned files. They lead the sidebar order (see `sidebarOrder`).
+    @ObservationIgnored let pins: Pins
+
+    init(pins: Pins = .shared) {
+        self.pins = pins
+    }
+
     private(set) var files: [MarcFile] = []
     var selectedID: MarcFile.ID?
     /// For File > Open Recent. Updated by MarcDocumentController.
     var recentURLs: [URL] = []
+    /// Set by `activate` when a pin's file is gone. ContentView shows it, then clears it.
+    var missingPinNotice: MissingPinNotice?
 
     /// The main window, set by `MainWindowAccessor`. Close and save questions attach their sheets here.
     @ObservationIgnored weak var window: NSWindow?
@@ -23,6 +32,30 @@ final class OpenFiles {
     @ObservationIgnored weak var editor: EditorController?
 
     var selected: MarcFile? { files.first { $0.id == selectedID } }
+
+    /// The sidebar's file rows: the pins (open or closed), then the open files that are not pinned.
+    var sidebarRows: SidebarRows {
+        let keyed = files.map { (file: $0, key: $0.url.map(Pins.key)) }   // one key per file, not per pin and file
+        let pinned = pins.items.map { pin in
+            let key = Pins.key(pin.url)
+            return keyed.first { $0.key == key }.map { SidebarRow.file($0.file, pin: pin) } ?? .closedPin(pin)
+        }
+        let pinnedIDs = Set(pinned.compactMap { $0.file?.id })
+        return SidebarRows(pinned: pinned, open: files.filter { !pinnedIDs.contains($0.id) }.map { .file($0, pin: nil) })
+    }
+
+    /// The open files in sidebar order: open pinned files in pin order, then the others. ⇧⌘[ and ⇧⌘]
+    /// and the selection after a close go through this list. Closed pins are not in it.
+    var sidebarOrder: [MarcFile] { sidebarRows.all.compactMap(\.file) }
+
+    /// The sidebar opens by itself when there are pins or more than one open file.
+    var opensSidebar: Bool { !pins.items.isEmpty || files.count > 1 }
+
+    /// The open file of `pin`, or nil when it is closed.
+    private func openFile(for pin: Pin) -> MarcFile? {
+        let key = Pins.key(pin.url)
+        return files.first { $0.url.map(Pins.key) == key }
+    }
 
     /// Add the file at the bottom if it is new, select it, and bring the window to the front.
     func show(_ file: MarcFile) {
@@ -55,23 +88,58 @@ final class OpenFiles {
         }
     }
 
-    /// Called by `MarcFile.close`. A closed selected file passes the selection to the file below it,
-    /// else to the one above.
+    /// Called by `MarcFile.close`. A closed selected file passes the selection to the file below it
+    /// in the sidebar, else to the one above. A pin stays.
     func remove(_ file: MarcFile) {
         guard let index = files.firstIndex(of: file) else { return }
+        let order = sidebarOrder
         files.remove(at: index)
-        guard selectedID == file.id else { return }
-        selectedID = files.indices.contains(index) ? files[index].id : files.last?.id
+        guard selectedID == file.id, let row = order.firstIndex(of: file) else { return }
+        let next = order.indices.contains(row + 1) ? row + 1 : row - 1
+        selectedID = order.indices.contains(next) ? order[next].id : nil
     }
 
-    /// Select the file `offset` rows away from the selected one, wrapping around.
+    /// Select the file `offset` rows away from the selected one in the sidebar, wrapping around.
     func selectNeighbor(_ offset: Int) {
-        guard let index = files.firstIndex(where: { $0.id == selectedID }) else {
-            selectedID = files.first?.id
+        let order = sidebarOrder
+        guard let index = order.firstIndex(where: { $0.id == selectedID }) else {
+            selectedID = order.first?.id
             return
         }
-        let count = files.count
-        selectedID = files[((index + offset) % count + count) % count].id
+        let count = order.count
+        selectedID = order[((index + offset) % count + count) % count].id
+    }
+
+    /// Pin the file, or unpin it. Untitled files cannot be pinned.
+    func togglePin(_ file: MarcFile) {
+        if let url = file.url, let pin = pins.pin(for: url) {
+            unpin(pin)
+        } else {
+            pins.pin(file.url)
+        }
+    }
+
+    /// Unpin. An open file goes to the end of Open Files; a closed pin is gone.
+    func unpin(_ pin: Pin) {
+        if let file = openFile(for: pin) {
+            files.removeAll { $0 == file }
+            files.append(file)
+        }
+        pins.unpin(pin)
+    }
+
+    /// A click on a pin (also ⌥⌘1 to ⌥⌘9): select its file, or open it. When the file is gone, the pin is
+    /// removed and `missingPinNotice` says so.
+    func activate(_ pin: Pin) {
+        if let file = openFile(for: pin) {
+            selectedID = file.id
+        } else if pins.items.contains(where: { $0.id == pin.id }) {   // an unpinned pin does nothing
+            if let url = pins.resolve(pin) {
+                open(url)
+            } else {
+                missingPinNotice = MissingPinNotice(pin)
+            }
+        }
     }
 
     /// Ask (if needed) and close. False when the user cancelled.

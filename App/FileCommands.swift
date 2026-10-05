@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// File menu (New, Open…, Open Recent, Close, Save, …) and Window > Previous/Next File.
+/// File menu (New, Open…, Open Recent, Close, Save, Pin File, …) and Window > Previous/Next File and the pinned files.
 /// Replaces the DocumentGroup items: there are no document windows, so the menu acts on the
 /// selected file in `OpenFiles`.
 struct FileCommands: Commands {
@@ -40,6 +40,12 @@ struct FileCommands: Commands {
             // (it opens the Versions browser, untested without a document window).
             Button("Move To…") { files.selected?.move(nil) }
                 .disabled(files.selected == nil)
+            // An untitled file has no place to point to, so it cannot be pinned.
+            Button(files.pins.isPinned(files.selected?.url) ? "Unpin File" : "Pin File") {
+                if let file = files.selected { files.togglePin(file) }
+            }
+            .keyboardShortcut("p", modifiers: [.command, .option])
+            .disabled(files.selected?.url == nil)
         }
         CommandGroup(before: .windowArrangement) {
             Button("Previous File") { files.selectNeighbor(-1) }
@@ -49,6 +55,12 @@ struct FileCommands: Commands {
                 .keyboardShortcut("]", modifiers: [.command, .shift])
                 .disabled(files.files.count < 2)
             Divider()
+            // One item per pin, ⌥⌘1 to ⌥⌘9; a closed pin opens.
+            ForEach(Array(files.pins.items.prefix(9).enumerated()), id: \.element.id) { index, pin in
+                Button(pin.name) { files.activate(pin) }
+                    .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: [.command, .option])
+            }
+            if !files.pins.items.isEmpty { Divider() }
         }
     }
 }
