@@ -29,7 +29,8 @@ Marc makes the decisions for you. There are no settings.
 - **One style** — when you save with `⌘S`, Marc formats the file: `-` for bullets, `*` for
   emphasis, `#` headings, fenced code blocks, `---` for rules. YAML front matter stays as it is.
   `⌘Z` reverts the format. Autosave does not format.
-- **Live preview** — Marc hides the Markdown syntax while you type. There is no split view.
+- **Live preview** — Marc hides the Markdown syntax while you type. The editor is the main
+  preview. A rendered view and a split view are extras to see the final result.
 - **Two lint rules** — a link or image to a file that does not exist, and a heading level jump
   (for example H1 to H3). A small icon shows on the line. Click it to see the message.
 
@@ -77,7 +78,14 @@ marc https://example.com  # load a web page as Markdown into a new, unsaved docu
 - **Drag and drop** — drop an image, and Marc writes `![name](path)`. Drop a different file, and
   Marc writes a link. The path is relative to the Markdown file.
 - **Paste from the web** — `⌘V` changes copied HTML into Markdown. `⌥⇧⌘V` pastes plain text.
-- **Find and replace** — `⌘F` and `⌥⌘F`.
+- **Rendered preview** — **View → Preview** (`⌃⌘P`) shows the rendered document in place of the
+  editor. **View → Side by Side** (`⌘\`) shows the editor on the left and the rendered document on
+  the right; the preview follows the editor when you scroll. Press the same shortcut again to go
+  back to the editor. Links to `.md` files open in Marc, web and mail links in their default app,
+  and other files show in Finder.
+- **Markdown source** — **View → Show Markdown Source** (`⌥⌘U`) shows all Markdown syntax, with
+  one font size and light colors. Press it again for the live preview editor.
+- **Find and replace** — `⌘F` and `⌥⌘F`. In the full preview, `⌘F` finds in the rendered text.
 - **Print and PDF** — `⌘P` prints the document with a clean print style, and **File → Export as
   PDF…** writes a PDF. Relative images show.
 - **Window size** — a new window opens at the size and position of the last window.
@@ -103,6 +111,15 @@ selection apply to the word at the cursor.
 | `⌘⇧T` | Task |
 | `⌘⇧-` | Horizontal rule |
 
+These shortcuts change the view:
+
+| Shortcut | View |
+| --- | --- |
+| `⌃⌘P` | Preview: the rendered document in place of the editor |
+| `⌘\` | Side by Side: editor and rendered document |
+| `⌥⌘U` | Show Markdown Source: all syntax, one font size |
+| `⌃⌘S` | Sidebar |
+
 ## Development
 
 ```sh
@@ -115,7 +132,7 @@ make clean   # remove the build output
 The editor is a fork of [swift-markdown-engine](https://github.com/nodes-app/swift-markdown-engine)
 in `Packages/MarkdownEngine`. Marc also uses [swift-markdown](https://github.com/swiftlang/swift-markdown)
 for format and lint, [Demark](https://github.com/steipete/Demark) for HTML to Markdown, and
-[swift-cmark](https://github.com/swiftlang/swift-cmark) for print. See [DESIGN.md](DESIGN.md) for
+[swift-cmark](https://github.com/swiftlang/swift-cmark) for print and the rendered preview. See [DESIGN.md](DESIGN.md) for
 the design.
 
 ## License

@@ -42,13 +42,12 @@ extension EditorController {
     private var documentTitle: String { file?.title ?? "Untitled" }
 
     func startPrintJob(_ output: PrintJob.Output) {
-        let family = AppearanceSettings.shared.fontFamily
         let title = documentTitle
         let html = PrintRenderer.page(
             markdown: currentText,
             title: title,
             baseFolder: documentFolder,
-            fontFamily: family == AppearanceSettings.systemFamily ? nil : family
+            fontFamily: AppearanceSettings.shared.htmlFontFamily
         )
         PrintJob.start(html: html, title: title, output: output, window: textView?.window)
     }

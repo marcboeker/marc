@@ -145,6 +145,9 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
     /// Display-text length after the previous textDidChange — yields the edit's
     /// length delta without retaining the previous text.
     var previousDisplayLength: Int = -1
+    /// Memo for `makeBaseAttributes`, keyed by every input it reads (raw source
+    /// mode asks for it on each keystroke).
+    var cachedBaseAttributes: (key: BaseAttributesKey, attributes: [NSAttributedString.Key: Any])?
     /// Storage form computed by the previous wiki sync, kept synchronously
     /// (unlike `lastSyncedText`, which updates via async dispatch and can lag a
     /// keystroke). This is the splice base for the incremental path.

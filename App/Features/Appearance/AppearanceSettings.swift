@@ -18,6 +18,7 @@ final class AppearanceSettings {
         static let fontSize = "editorFontSize"
         static let lineSpacing = "editorLineSpacing"
         static let widthFraction = "editorWidthFraction"
+        static let showsMarkdownSource = "editorShowsMarkdownSource"
     }
 
     /// Font family name, or `systemFamily` for the system font.
@@ -36,6 +37,11 @@ final class AppearanceSettings {
     var widthFraction: CGFloat {
         didSet { UserDefaults.standard.set(Double(widthFraction), forKey: Key.widthFraction) }
     }
+    /// View > Show Markdown Source: all syntax visible, one font size, light highlighting.
+    /// Not part of `reset()`: it is a view mode, not a look.
+    var showsMarkdownSource: Bool {
+        didSet { UserDefaults.standard.set(showsMarkdownSource, forKey: Key.showsMarkdownSource) }
+    }
 
     private init() {
         let defaults = UserDefaults.standard
@@ -50,6 +56,7 @@ final class AppearanceSettings {
             ?? Self.defaultLineSpacing
         widthFraction = (defaults.object(forKey: Key.widthFraction) as? Double).map { CGFloat($0) }
             ?? Self.defaultWidthFraction
+        showsMarkdownSource = defaults.bool(forKey: Key.showsMarkdownSource)
     }
 
     /// Name for `NSFont(name:size:)`. The engine falls back to the system font for unknown names.
@@ -59,6 +66,9 @@ final class AppearanceSettings {
         else { return "SF Pro" }
         return font.fontName
     }
+
+    /// Family name for the HTML of Print and Preview, or nil for the system font.
+    var htmlFontFamily: String? { fontFamily == Self.systemFamily ? nil : fontFamily }
 
     /// One point up or down, kept in `fontSizeRange`.
     func stepFontSize(by points: CGFloat) {

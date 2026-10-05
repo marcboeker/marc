@@ -11,9 +11,7 @@ struct Sidebar: View {
     /// A drop opens Markdown and plain text (not source code or JSON, which also conform to plain text).
     private static func opens(_ url: URL) -> Bool {
         guard url.isFileURL else { return false }
-        if url.pathExtension.lowercased() == "md" { return true }
-        guard let type = UTType(filenameExtension: url.pathExtension) else { return false }
-        return type.conforms(to: .markdown) || type == .plainText
+        return url.isMarkdownFile || UTType(filenameExtension: url.pathExtension) == .plainText
     }
 
     var body: some View {

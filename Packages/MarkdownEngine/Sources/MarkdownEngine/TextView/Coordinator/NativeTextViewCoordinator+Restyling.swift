@@ -65,17 +65,7 @@ extension NativeTextViewCoordinator {
         previousBacktickCount = MarkdownDetection.tripleBacktickCount(in: nsDisplay)
         let fullRange = NSRange(location: 0, length: nsDisplay.length)
 
-        let (baseFont, paragraph) = TextStylingService.makeBaseFontAndStyle(
-            fontName: fontName,
-            fontSize: fontSize,
-            layoutBridge: layoutBridge,
-            configuration: configuration
-        )
-        let baseAttrs: [NSAttributedString.Key: Any] = [
-            .font: baseFont,
-            .foregroundColor: configuration.theme.bodyText,
-            .paragraphStyle: paragraph
-        ]
+        let baseAttrs = makeBaseAttributes()
         // ── Root cause & fix (2026-07) ────────────────────────────────────────
         // CPU+page-fault instrumentation proved the first per-process open of a large
         // note spent 12.5s of PURE CPU (blocked=2ms), writing 69k attributes to the LIVE
@@ -89,7 +79,11 @@ extension NativeTextViewCoordinator {
         // Kept for the end-of-rebuild selection replay (see below); raw mode leaves it nil.
         var parsedForReplay: ParsedDocument?
         if rawMode {
-            // Base attributes only — the source stays verbatim and unstyled.
+            // Marc: the source stays verbatim at one font size, with light highlighting.
+            let parsed = parsedDocument(for: displayText)
+            SourceHighlighter.apply(to: built, text: nsDisplay, scope: fullRange,
+                                    tokens: parsed.tokens, blocks: parsed.blocks,
+                                    base: baseAttrs, theme: configuration.theme)
             activeTokenIndices = []
             // Raw mode draws no code-block overlays; drop the styled document's
             // tokens so a later no-`parsed` refresh doesn't substring this text
@@ -167,11 +161,7 @@ extension NativeTextViewCoordinator {
         textView.textStorage?.endEditing()
 
 
-        textView.typingAttributes = TextStylingService.makeBaseTypingAttributes(
-            font: baseFont,
-            paragraphStyle: paragraph,
-            theme: configuration.theme
-        )
+        textView.typingAttributes = baseAttrs
 
         if let tlm = textView.textLayoutManager {
             if invalidateLayout {
@@ -205,6 +195,82 @@ extension NativeTextViewCoordinator {
         if let nativeTextView = textView as? NativeTextView {
             nativeTextView.updateWideTableOverlays()
         }
+    }
+
+    /// Marc: raw source mode after an edit. Highlights the edited lines and the lines next to them,
+    /// whole code blocks that touch them, or the whole document when a ``` fence came or went.
+    func highlightRawSource(_ textView: NSTextView, text: String, editedRange: NSRange?, trusted: Bool) {
+        guard let storage = textView.textStorage else { return }
+        let nsText = text as NSString
+        let length = nsText.length
+        let lengthDelta = previousDisplayLength >= 0 ? length - previousDisplayLength : Int.min
+        previousDisplayLength = length
+        let edited = editedRange.flatMap { $0.location == NSNotFound ? nil : $0 } ?? textView.selectedRange()
+
+        let backtickCount = incrementalBacktickCensus(fullText: nsText, editedRange: edited,
+                                                      lengthDelta: lengthDelta, trusted: trusted)
+        let fenceChanged = backtickCount != previousBacktickCount
+        previousBacktickCount = backtickCount
+        let parsed = parsedDocument(for: text, edit: trusted && lengthDelta != Int.min
+            ? ParseEditDescriptor(editedRange: edited, delta: lengthDelta)
+            : nil)
+
+        var scope = NSRange(location: 0, length: length)
+        if !fenceChanged {
+            let start = min(edited.location, length)
+            let lines = nsText.lineRange(for: NSRange(location: start, length: min(NSMaxRange(edited), length) - start))
+            scope = lines
+            if lines.location > 0 {
+                scope = NSUnionRange(scope, nsText.lineRange(for: NSRange(location: lines.location - 1, length: 0)))
+            }
+            if NSMaxRange(lines) < length {
+                scope = NSUnionRange(scope, nsText.lineRange(for: NSRange(location: NSMaxRange(lines), length: 0)))
+            }
+            for (_, token) in parsed.codeBlockTokensWithIndices
+            where NSIntersectionRange(token.range, scope).length > 0 || NSLocationInRange(scope.location, token.range) {
+                scope = NSUnionRange(scope, nsText.lineRange(for: token.range))
+            }
+        }
+        storage.beginEditing()
+        SourceHighlighter.apply(to: storage, text: nsText, scope: scope, tokens: parsed.tokens,
+                                blocks: parsed.blocks, base: makeBaseAttributes(), theme: configuration.theme)
+        storage.endEditing()
+    }
+
+    /// Everything `makeBaseAttributes` reads. A key compare instead of setter
+    /// invalidation: `updateNSView` writes `configuration` fields on every pass,
+    /// so a didSet would drop the memo far more often than the inputs change.
+    struct BaseAttributesKey: Equatable {
+        let fontName: String
+        let fontSize: CGFloat
+        let layoutBridge: ObjectIdentifier?
+        let bodyText: NSColor
+        let spacingFactor: CGFloat
+        let lineHeightExtraSpacing: CGFloat
+        let indentPerLevel: CGFloat
+    }
+
+    /// Body text attributes: base font, body colour, base paragraph style. Memoized.
+    func makeBaseAttributes() -> [NSAttributedString.Key: Any] {
+        let key = BaseAttributesKey(
+            fontName: fontName,
+            fontSize: fontSize,
+            layoutBridge: layoutBridge.map(ObjectIdentifier.init),
+            bodyText: configuration.theme.bodyText,
+            spacingFactor: configuration.paragraph.spacingFactor,
+            lineHeightExtraSpacing: configuration.paragraph.lineHeightExtraSpacing,
+            indentPerLevel: configuration.lists.indentPerLevel
+        )
+        if let cachedBaseAttributes, cachedBaseAttributes.key == key { return cachedBaseAttributes.attributes }
+        let (baseFont, paragraph) = TextStylingService.makeBaseFontAndStyle(
+            fontName: fontName,
+            fontSize: fontSize,
+            layoutBridge: layoutBridge,
+            configuration: configuration
+        )
+        let attributes = TextStylingService.makeBaseTypingAttributes(font: baseFont, paragraphStyle: paragraph, theme: configuration.theme)
+        cachedBaseAttributes = (key, attributes)
+        return attributes
     }
 
     @discardableResult

@@ -11,6 +11,9 @@ struct ContentView: View {
     @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
     /// Width of the window's screen. The width limit is a part of it.
     @State private var screenWidth = NSScreen.main?.frame.width ?? 0
+    /// The editor's part of the split. Not saved: each Side by Side starts at 50/50.
+    @State private var splitFraction: CGFloat = 0.5
+    @State private var detailWidth: CGFloat = 0
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -18,13 +21,14 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 160, ideal: 220, max: 400)
         } detail: {
             if let file = files.selected {
-                editor(file)
+                detail(file)
             } else {
                 emptyState
             }
         }
         .navigationTitle(title)
-        .frame(minWidth: 480, minHeight: 320)
+        // Side by side: the window does not get narrower than the split needs (the sidebar goes first).
+        .frame(minWidth: controller.previewMode == .split ? max(480, PreviewLayout.minimumSplitWidth) : 480, minHeight: 320)
         .background(MainWindowAccessor())
         .overlay(alignment: .bottom) {
             if let notice = files.missingPinNotice {
@@ -45,6 +49,12 @@ struct ContentView: View {
             if opens { columnVisibility = .all }
         }
         .onChange(of: files.selectedID) { sync() }
+        .onChange(of: controller.previewMode) { _, mode in
+            if mode == .split {
+                splitFraction = 0.5
+                makeRoomForSplit()
+            }
+        }
         .onChange(of: files.selected?.url, initial: true) {   // a switch, Save As, Move To
             files.window?.representedURL = files.selected?.url
         }
@@ -56,26 +66,40 @@ struct ContentView: View {
         }
     }
 
-    /// One editor for all files. Each file has its own `documentId` and text binding, so the engine
-    /// keeps undo and scroll position per file, and an edit lands in the file it was made in.
-    private func editor(_ file: MarcFile) -> some View {
+    /// The editor, and in a preview mode the rendered page over it or beside it. The editor stays in
+    /// the view tree in every mode (hidden under the overlay), so it keeps its text view, undo and scroll.
+    private func detail(_ file: MarcFile) -> some View {
         GeometryReader { geometry in
-            NativeTextViewWrapper(
-                text: Binding(get: { file.text }, set: { file.edit($0) }),
-                configuration: configuration(width: geometry.size.width, folder: file.url?.deletingLastPathComponent()),
-                fontName: appearance.fontName,
-                fontSize: appearance.fontSize,
-                documentId: file.id.uuidString,
-                retainedScrollDocumentIds: Set(files.files.map(\.id.uuidString)),   // closed files drop their undo
-                onTextViewReady: {
-                    controller.attach($0)
-                    updateScreenWidth()
-                },
-                onWillPaste: { controller.dropPaste.willPaste(in: $0, pasteboard: $1) },
-                onDropFiles: { controller.dropPaste.drop(in: $0, info: $1, insertionIndex: $2) },
-                onSaveRequest: { _ in controller.saveRequested() },
-                onDocumentShown: { _ in controller.fileShown(file) }
-            )
+            let mode = controller.previewMode
+            let layout = PreviewLayout(mode: mode, width: geometry.size.width, fraction: splitFraction)
+            ZStack(alignment: .topLeading) {
+                editor(file, width: layout.editorWidth)
+                    .frame(width: layout.editorWidth, height: geometry.size.height)
+                    .opacity(mode == .overlay ? 0 : 1)
+                    .allowsHitTesting(mode != .overlay)
+                    .accessibilityHidden(mode == .overlay)
+                if mode == .split {
+                    SplitDivider(width: geometry.size.width, fraction: $splitFraction)
+                        .frame(height: geometry.size.height)
+                        .offset(x: layout.editorWidth)
+                }
+                if mode != .editor {
+                    PreviewPane(
+                        preview: controller.preview,
+                        text: file.text,
+                        folder: file.url?.deletingLastPathComponent(),
+                        style: PreviewStyle(settings: appearance, screenWidth: screenWidth)
+                    )
+                    .frame(width: layout.previewWidth, height: geometry.size.height)
+                    .offset(x: layout.previewX)
+                }
+            }
+            .coordinateSpace(.named(SplitDivider.space))
+        }
+        .onGeometryChange(for: CGFloat.self, of: \.size.width) { width in
+            detailWidth = width
+            // Narrower than the split needs (the window shrank, or the sidebar opened): the sidebar goes.
+            if controller.previewMode == .split, width < PreviewLayout.minimumSplitWidth { makeRoomForSplit() }
         }
         .overlay(alignment: .bottom) {
             if let notice = file.mergeNotice {
@@ -94,6 +118,45 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.25), value: file.mergeNotice)
+    }
+
+    /// One editor for all files. Each file has its own `documentId` and text binding, so the engine
+    /// keeps undo and scroll position per file, and an edit lands in the file it was made in.
+    /// `width` is the editor's part of the detail area.
+    private func editor(_ file: MarcFile, width: CGFloat) -> some View {
+        NativeTextViewWrapper(
+            text: Binding(get: { file.text }, set: { file.edit($0) }),
+            configuration: configuration(width: width, folder: file.url?.deletingLastPathComponent()),
+            fontName: appearance.fontName,
+            fontSize: appearance.fontSize,
+            documentId: file.id.uuidString,
+            retainedScrollDocumentIds: Set(files.files.map(\.id.uuidString)),   // closed files drop their undo
+            // The text view's mouse tracking fires under the overlay too: no I-beam over the preview.
+            isCursorExcluded: { _ in controller.editorIsHidden },
+            onTextViewReady: {
+                controller.attach($0)
+                updateScreenWidth()
+            },
+            onWillPaste: { controller.dropPaste.willPaste(in: $0, pasteboard: $1) },
+            onDropFiles: { controller.dropPaste.drop(in: $0, info: $1, insertionIndex: $2) },
+            onSaveRequest: { _ in controller.saveRequested() },
+            onDocumentShown: { _ in controller.fileShown(file) }
+        )
+    }
+
+    /// Side by side needs room for both halves: hide the sidebar, then widen the window if that is not enough.
+    private func makeRoomForSplit() {
+        let needed = PreviewLayout.minimumSplitWidth
+        guard detailWidth < needed else { return }
+        columnVisibility = .detailOnly
+        guard let window = files.window, window.contentLayoutRect.width < needed else { return }
+        var frame = window.frame
+        frame.size.width += needed - window.contentLayoutRect.width
+        if let screen = window.screen?.visibleFrame {
+            frame.size.width = min(frame.width, screen.width)
+            frame.origin.x = max(screen.minX, min(frame.origin.x, screen.maxX - frame.width))
+        }
+        window.setFrame(frame, display: true, animate: true)
     }
 
     private var emptyState: some View {
@@ -126,6 +189,7 @@ struct ContentView: View {
         config.services.images = FileImageProvider(baseURL: folder)
         config.extensions = [StrikethroughExtension()]
         config.theme = .marc
+        config.rawSourceMode = appearance.showsMarkdownSource
         // Code lines up with the body text; the slab reaches into the inset instead.
         config.codeBlock.horizontalIndent = 0
         config.codeBlock.backgroundOutset = 12

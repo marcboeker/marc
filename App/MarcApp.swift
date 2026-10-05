@@ -19,6 +19,7 @@ struct MarcApp: App {
         .commands {
             FileCommands()              // App/FileCommands.swift
             SidebarCommands()           // View > Show/Hide Sidebar, ⌃⌘S
+            PreviewCommands()           // Features/Preview: View > Preview ⌃⌘P, Side by Side ⌘\
             FontSizeCommands()          // Features/Appearance
             FindCommands()              // Features/Find
             FormatCommands()            // Features/Shortcuts

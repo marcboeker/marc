@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Edit > Find: drives the text view's find bar. SwiftUI's `TextEditingCommands` would add
+/// Edit > Find: drives the text view's find bar, or the preview's while the preview replaces the editor. SwiftUI's `TextEditingCommands` would add
 /// the same menu, but its "Use Selection for Find" takes ⌘E, which is Format > Code here.
 struct FindCommands: Commands {
     @FocusedValue(\.editorController) private var controller
@@ -28,7 +28,12 @@ struct FindCommands: Commands {
 
 extension EditorController {
     /// Run a find bar action on this window's text view, even when the sidebar has focus.
+    /// In the overlay preview it finds in the rendered text; side by side it stays in the editor.
     func performFind(_ action: NSTextFinder.Action) {
+        if editorIsHidden {
+            preview.performFind(action)
+            return
+        }
         guard let textView else { return }
         // NSTextView reads the action from the sender's tag.
         let sender = NSMenuItem()
