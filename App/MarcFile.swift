@@ -20,7 +20,10 @@ final class MarcFile: NSDocument, Identifiable {
 
     /// `fileURL`, but observable: Save As, Move To and Rename change it.
     private(set) var url: URL? {
-        didSet { analyze() }   // relative links resolve against the new folder
+        didSet {
+            analyze()   // relative links resolve against the new folder
+            OpenFiles.shared.pins.fileMoved(from: oldValue, to: url)   // a pin follows a rename or move
+        }
     }
 
     /// The name in the title bar: the file name without extension, or "Untitled".

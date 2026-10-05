@@ -5,8 +5,9 @@ struct ContentView: View {
     @State private var controller = EditorController()
     private var files = OpenFiles.shared
     private var appearance = AppearanceSettings.shared
-    /// Opens when the file count goes from one or none to more than one (or the window opens with several files);
-    /// it never closes by itself, so a ⌃⌘S hide holds until the count drops to one and goes up again.
+    /// Opens when `OpenFiles.opensSidebar` turns true: the file count goes from one or none to more than one, or a pin
+    /// appears (also when the window opens with several files or pins). It never closes by itself, so a ⌃⌘S hide
+    /// holds until that turns false and true again.
     @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
     /// Width of the window's screen. The width limit is a part of it.
     @State private var screenWidth = NSScreen.main?.frame.width ?? 0
@@ -25,13 +26,23 @@ struct ContentView: View {
         .navigationTitle(title)
         .frame(minWidth: 480, minHeight: 320)
         .background(MainWindowAccessor())
+        .overlay(alignment: .bottom) {
+            if let notice = files.missingPinNotice {
+                NoticeCapsule(message: notice.message, id: notice.id, seconds: 4) {
+                    if files.missingPinNotice == notice { files.missingPinNotice = nil }
+                }
+                .padding(.bottom, 20)
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: files.missingPinNotice)
         .focusedSceneValue(\.editorController, files.selected == nil ? nil : controller)
         .onAppear {
             files.editor = controller
             sync()
         }
-        .onChange(of: files.files.count, initial: true) { old, new in
-            if new > 1, old <= 1 || old == new { columnVisibility = .all }
+        .onChange(of: files.opensSidebar, initial: true) { _, opens in
+            if opens { columnVisibility = .all }
         }
         .onChange(of: files.selectedID) { sync() }
         .onChange(of: files.selected?.url, initial: true) {   // a switch, Save As, Move To

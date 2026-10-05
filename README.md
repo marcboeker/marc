@@ -72,6 +72,8 @@ marc https://example.com  # load a web page as Markdown into a new, unsaved docu
   `.md` and `.markdown` files.
 - **Outline** — a sidebar with the headings of the document. Toggle it with `⌃⌘S`. Click a
   heading to go to it.
+- **Pinned files** — pin a file with `⌥⌘P` or a right-click in the sidebar. Pins stay at the top
+  of the sidebar, also after you close the file or quit Marc. `⌥⌘1` to `⌥⌘9` open them.
 - **Drag and drop** — drop an image, and Marc writes `![name](path)`. Drop a different file, and
   Marc writes a link. The path is relative to the Markdown file.
 - **Paste from the web** — `⌘V` changes copied HTML into Markdown. `⌥⇧⌘V` pastes plain text.

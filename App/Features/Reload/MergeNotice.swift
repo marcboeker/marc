@@ -21,18 +21,31 @@ struct MergeNoticeView: View {
     let onTimeout: () -> Void
 
     var body: some View {
-        Text(notice.message)
+        NoticeCapsule(message: notice.message, id: notice.id, seconds: 3, onTimeout: onTimeout)
+            .contentShape(Capsule())
+            .onTapGesture(perform: onClick)
+            .help(notice.conflicts > 0 ? "Select the first conflict" : "")
+    }
+}
+
+/// The capsule look of a notice (merge result, missing pin). It calls `onTimeout` after `seconds`;
+/// a new `id` restarts the timer.
+struct NoticeCapsule<ID: Equatable>: View {
+    let message: String
+    let id: ID
+    let seconds: Double
+    let onTimeout: () -> Void
+
+    var body: some View {
+        Text(message)
             .font(.callout)
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
             .background(.regularMaterial, in: Capsule())
             .overlay(Capsule().strokeBorder(.separator))
             .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
-            .contentShape(Capsule())
-            .onTapGesture(perform: onClick)
-            .help(notice.conflicts > 0 ? "Select the first conflict" : "")
-            .task(id: notice.id) {
-                try? await Task.sleep(for: .seconds(3))
+            .task(id: id) {
+                try? await Task.sleep(for: .seconds(seconds))
                 if !Task.isCancelled { onTimeout() }
             }
     }
