@@ -217,6 +217,7 @@ enum BlockLevelTokenizer {
     }
 
     /// `^[ \t]*\|[- \t:|]+\|[ \t]*$` — outer pipes, inner only `- : | space tab`.
+    // Marc: internal (upstream private), for SourceHighlighter.
     static func isTableSeparator(_ s: NSString, _ start: Int, _ end: Int) -> Bool {
         var i = start
         while i < end, isWS(s.character(at: i)) { i += 1 }

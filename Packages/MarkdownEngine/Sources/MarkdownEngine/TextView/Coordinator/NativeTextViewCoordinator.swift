@@ -46,6 +46,7 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
     var undoContentSnapshots: [String: String] = [:]
     // Marc: per-document selection, saved on switch-away and restored on switch-back. Pruned alongside `undoManagers`.
     var selections: [String: NSRange] = [:]
+    // Marc: for the `onDocumentShown` hook.
     /// The document `onDocumentShown` last reported.
     var shownDocumentId: String?
     @Binding var text: String
@@ -145,6 +146,7 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
     /// Display-text length after the previous textDidChange — yields the edit's
     /// length delta without retaining the previous text.
     var previousDisplayLength: Int = -1
+    // Marc: new, for raw source highlighting.
     /// Memo for `makeBaseAttributes`, keyed by every input it reads (raw source
     /// mode asks for it on each keystroke).
     var cachedBaseAttributes: (key: BaseAttributesKey, attributes: [NSAttributedString.Key: Any])?
@@ -316,6 +318,7 @@ public final class NativeTextViewCoordinator: NSObject, NSTextViewDelegate {
         _text = binding
     }
 
+    // Marc: replaces the inline `DispatchQueue.main.async { text = ... }` pushes of upstream.
     /// Push an edit (storage form) into the text binding a turn later: SwiftUI forbids writes during its
     /// update pass. The push goes to the binding of the document that made the edit, also when the
     /// embedder switched documents in between.

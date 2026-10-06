@@ -280,6 +280,7 @@ public struct CodeBlockStyle: Sendable {
     public var paragraphSpacing: CGFloat
     /// Left/right indent (in points) so code blocks don't run into the gutter.
     public var horizontalIndent: CGFloat
+    // Marc: new. The default 0 keeps the upstream fill width.
     /// How far (points) the background reaches past the text column on each
     /// side, into the text inset. With `horizontalIndent` 0 the code lines up
     /// with the body text and the fill still frames it.
@@ -289,12 +290,12 @@ public struct CodeBlockStyle: Sendable {
         fontSizeScale: CGFloat = 0.85,
         paragraphSpacing: CGFloat = 2.0,
         horizontalIndent: CGFloat = 12.0,
-        backgroundOutset: CGFloat = 0
+        backgroundOutset: CGFloat = 0 // Marc:
     ) {
         self.fontSizeScale = fontSizeScale
         self.paragraphSpacing = paragraphSpacing
         self.horizontalIndent = horizontalIndent
-        self.backgroundOutset = backgroundOutset
+        self.backgroundOutset = backgroundOutset // Marc:
     }
 
     public static let `default` = CodeBlockStyle()
@@ -577,11 +578,12 @@ public struct InlineLatexStyle: Sendable {
 public struct BlockquoteStyle: Sendable {
     /// Extra height (points) added to the default line height for blockquote lines.
     public var extraLineHeight: CGFloat
+    // Marc: new, for the quote panel (MarkdownTextLayoutFragment, MarkdownASTStyler.styleBlockquote).
     /// Space (points) between the panel edge and the first and last line when
     /// the theme has a `blockquoteBackground`. Ignored without one.
     public var panelPadding: CGFloat
 
-    public init(extraLineHeight: CGFloat = 0, panelPadding: CGFloat = 8) {
+    public init(extraLineHeight: CGFloat = 0, panelPadding: CGFloat = 8) { // Marc: panelPadding
         self.extraLineHeight = extraLineHeight
         self.panelPadding = panelPadding
     }
@@ -642,7 +644,7 @@ public struct OverscrollPolicy: Sendable {
     public var activationRangeFraction: CGFloat
 
     public init(
-        percent: CGFloat = 0.25,
+        percent: CGFloat = 0.25, // Marc: upstream 0.5
         maxPoints: CGFloat = 450,
         minPoints: CGFloat = 40,
         activationStartFraction: CGFloat = 0.15,

@@ -29,6 +29,7 @@ extension NSAttributedString.Key {
     /// Int nesting level (1-based) of a blockquote line; the fragment
     /// paints that many vertical bars in the left gutter.
     static let blockquoteLevel = NSAttributedString.Key("BlockquoteLevel")
+    // Marc: new keys (blockquoteEdges, codeBlockBackground, codeBlockLanguage, inlineCodeBackground).
     /// [Int] — one `BlockquoteEdge` mask per nesting level of a blockquote
     /// line: whether that level's panel opens and/or closes on this line.
     static let blockquoteEdges = NSAttributedString.Key("BlockquoteEdges")
@@ -67,6 +68,7 @@ public extension NSAttributedString.Key {
     static let markdownBlockBackground = NSAttributedString.Key("MarkdownBlockBackground")
 }
 
+// Marc: new.
 /// Bits of a `.blockquoteEdges` entry.
 enum BlockquoteEdge {
     static let top = 1
@@ -78,8 +80,9 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
     /// Horizontal space (points) each blockquote nesting level occupies —
     /// shared so the styler's text indent and the painted bars line up.
     /// Level N's bar sits where level N-1's text starts.
-    static let blockquoteIndentPerLevel: CGFloat = 20
+    static let blockquoteIndentPerLevel: CGFloat = 20 // Marc: upstream 18
     static let blockquoteBarWidth: CGFloat = 3
+    // Marc: new constants for quote panels and inline code pills.
     /// Right inset of each nested blockquote panel inside its parent.
     static let blockquoteNestedInset: CGFloat = 8
     static let panelCornerRadius: CGFloat = 6
@@ -107,11 +110,12 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         if hasCodeBlockBackground || hasThematicBreak || hasBlockquote || hasTaskCheckbox {
             let containerWidth = textLayoutManager?.textContainer?.size.width ?? bounds.width
             // Extend left to container edge; a code block's fill reaches past it.
+            // Marc: the outset (`CodeBlockStyle.backgroundOutset`) is new.
             let outset = hasCodeBlockBackground ? codeBlockOutset : 0
             bounds.origin.x = -layoutFragmentFrame.origin.x - outset
             bounds.size.width = containerWidth + 2 * outset
         }
-        // Quote panels reach into the paragraph spacing above and below.
+        // Marc: quote panels reach into the paragraph spacing above and below.
         for panel in blockquotePanels(at: .zero) {
             bounds = bounds.union(panel.rect)
         }
@@ -134,12 +138,13 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         drawCodeBlockBackground(at: point, in: context)
 
         // 1a. Quote panels and bars (behind text — text is indented past the bars)
+        //     Marc: upstream drew the bars only, as step 6.
         drawBlockquotePanels(at: point, in: context)
 
         // 1b. Line-box fills (`==highlight==` and friends), behind text
         drawBlockBackgrounds(at: point, in: context)
 
-        // 1c. Inline code pills, behind text
+        // 1c. Inline code pills, behind text (Marc: new)
         drawInlineCodePills(at: point, in: context)
 
         // 2. LaTeX images (behind text — hidden markers are invisible anyway)
@@ -159,7 +164,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         //    fight with anything that already drew at the line's center)
         drawThematicBreaks(at: point, in: context)
 
-        // 6. Code-block language label (top-right corner, hidden fence only)
+        // 6. Code-block language label (top-right corner, hidden fence only) (Marc: new)
         drawCodeBlockLanguage(at: point, in: context)
     }
 
@@ -221,6 +226,8 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
 
     // MARK: - Code Block Background
 
+    // Marc: code blocks are found by the `.codeBlockBackground` attribute. Upstream compared
+    // `.backgroundColor` with `SyntaxHighlighter.backgroundColor()` (isCodeBlockBackgroundColor, removed).
     /// The code-block fill of this fragment, or nil outside code blocks.
     private var codeBlockBackground: NSColor? {
         guard let ts = textStorage, let range = fragmentNSRange, range.length > 0 else { return nil }
@@ -229,6 +236,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
 
     private var hasCodeBlockBackground: Bool { codeBlockBackground != nil }
 
+    // Marc: new helpers.
     private var configuration: MarkdownEditorConfiguration {
         (textLayoutManager?.textContainer?.textView as? NativeTextView)?.configuration ?? .default
     }
@@ -290,7 +298,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
             ?? NSScreen.main?.backingScaleFactor ?? 2.0
         let rawY = point.y
         let rawMaxY = point.y + effectiveHeight
-        // Round, not floor/ceil: neighbouring lines then share one pixel edge
+        // Marc: round, not floor/ceil: neighbouring lines then share one pixel edge
         // instead of overlapping by one, which a translucent fill shows as a seam.
         let snappedY = (rawY * scale).rounded() / scale
         let snappedMaxY = (rawMaxY * scale).rounded() / scale
@@ -302,7 +310,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         let nsContext = NSGraphicsContext(cgContext: context, flipped: true)
         NSGraphicsContext.current = nsContext
 
-        let bgRect = CGRect(
+        let bgRect = CGRect( // Marc: plus the outset on each side
             x: point.x - layoutFragmentFrame.origin.x - codeBlockOutset,
             y: snappedY,
             width: containerWidth + 2 * codeBlockOutset,
@@ -359,6 +367,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         return rects
     }
 
+    // Marc: new.
     /// Draw the language of a hidden opening fence at the right edge of the
     /// text column, vertically centered on the fence line.
     private func drawCodeBlockLanguage(at point: CGPoint, in context: CGContext) {
@@ -384,6 +393,8 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
     }
 
     // MARK: - Inline Code Pills
+
+    // Marc: new section. Upstream filled inline code with `.backgroundColor` (glyph box).
 
     /// One rounded rect per line an `.inlineCodeBackground` run touches,
     /// sized to the code font's glyph box plus a little air.
@@ -736,6 +747,9 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
     }
 
     // MARK: - Blockquote Panels
+
+    // Marc: replaces upstream's drawBlockquoteBars. Bars sit at the level's left edge (upstream:
+    // a quarter indent in) and use `theme.blockquoteBar`; the optional panel fill is new.
 
     /// What one quote line paints for one nesting level: the panel (nil
     /// without a theme background), the bar at its left edge, and which of

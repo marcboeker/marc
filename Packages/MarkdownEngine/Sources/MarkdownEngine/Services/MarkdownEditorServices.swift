@@ -112,6 +112,8 @@ public struct NoOpEmbeddedImageProvider: EmbeddedImageProvider {
 
 /// Provides code-block font and syntax highlighting. Code fills come from
 /// the theme (`codeBlockBackground`, `inlineCodeBackground`).
+// Marc: `backgroundColor()` removed. The fragment found code blocks by comparing
+// colors; it now reads the `.codeBlockBackground` attribute.
 public protocol SyntaxHighlighter: Sendable {
     /// Monospace font used for fenced code blocks at the requested size.
     func codeFont(size: CGFloat) -> NSFont

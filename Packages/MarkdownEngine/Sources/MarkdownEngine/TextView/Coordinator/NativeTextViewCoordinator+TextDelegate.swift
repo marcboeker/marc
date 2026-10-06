@@ -86,6 +86,8 @@ extension NativeTextViewCoordinator {
         // Before the early returns: the first keystroke must hide the placeholder.
         (tv as? NativeTextView)?.refreshPlaceholderVisibility()
         // Raw mode: display IS storage — sync the binding, re-highlight the edited lines.
+        // Marc: upstream only pushed the text. The highlight needs the edit descriptor, so read it
+        // before the reset.
         if configuration.rawSourceMode {
             let editedRange = pendingEditedRange ?? tv.textStorage?.editedRange
             let singleTrackedEdit = pendingEditCount == 1
@@ -196,6 +198,7 @@ extension NativeTextViewCoordinator {
             }
 #endif
             if storageState.storage != self.lastSyncedText {
+                // Marc: through `scheduleTextPush` (per-document binding).
                 scheduleTextPush(storageState.storage)
             }
         }
@@ -785,6 +788,7 @@ extension NativeTextViewCoordinator {
     /// the contribution of runs it touches. `previousBacktickCount` minus the
     /// pre-edit window count (captured in shouldChangeTextIn) plus the
     /// post-edit window count is exact. Any doubt → full scan.
+    // Marc: internal (upstream private), for `highlightRawSource`.
     func incrementalBacktickCensus(fullText: NSString, editedRange: NSRange,
                                            lengthDelta: Int, trusted: Bool) -> Int {
         defer { pendingBacktickWindow = nil }

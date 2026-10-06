@@ -65,6 +65,7 @@ extension NativeTextViewCoordinator {
         previousBacktickCount = MarkdownDetection.tripleBacktickCount(in: nsDisplay)
         let fullRange = NSRange(location: 0, length: nsDisplay.length)
 
+        // Marc: from `makeBaseAttributes` (shared with raw source highlighting); upstream built them inline.
         let baseAttrs = makeBaseAttributes()
         // ── Root cause & fix (2026-07) ────────────────────────────────────────
         // CPU+page-fault instrumentation proved the first per-process open of a large
@@ -161,7 +162,7 @@ extension NativeTextViewCoordinator {
         textView.textStorage?.endEditing()
 
 
-        textView.typingAttributes = baseAttrs
+        textView.typingAttributes = baseAttrs // Marc: same values as upstream's makeBaseTypingAttributes call
 
         if let tlm = textView.textLayoutManager {
             if invalidateLayout {
@@ -237,6 +238,7 @@ extension NativeTextViewCoordinator {
         storage.endEditing()
     }
 
+    // Marc: new (BaseAttributesKey, makeBaseAttributes).
     /// Everything `makeBaseAttributes` reads. A key compare instead of setter
     /// invalidation: `updateNSView` writes `configuration` fields on every pass,
     /// so a didSet would drop the memo far more often than the inputs change.

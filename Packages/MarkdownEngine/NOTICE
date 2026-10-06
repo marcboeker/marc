@@ -11,7 +11,10 @@ Removed from upstream: Demo/, Tests/, media/, .github/, .spi.yml, CONTRIBUTING.m
 the MarkdownEngineCodeBlocks and MarkdownEngineLatex targets (and their
 HighlighterSwift / SwiftMath dependencies). Package.swift lists only MarkdownEngine.
 The upstream test suite (532 tests) passed against the modified sources with all
-new switches at their defaults.
+new switches at their defaults. That run does not cover items 11 and later: some upstream
+tests use APIs removed in item 12 (`SyntaxHighlighter.backgroundColor()`, the table
+`codeBackgroundColor` parameters), and BottomOverscrollPolicyTests expects the old
+overscroll default (item 16).
 
 Changes by Marc (all marked with `// Marc:` or in files starting with a Marc comment):
 
@@ -20,6 +23,8 @@ Changes by Marc (all marked with `// Marc:` or in files starting with a Marc com
    - onWillPaste: ((NSTextView, NSPasteboard) -> Bool)?
    - onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)?   (Int = UTF-16 insertion index)
    - onSaveRequest: ((NSTextView) -> Bool)?   (the `saveDocument:` action)
+   - onDocumentShown: ((String) -> Void)?   (async on main queue, once per document after its
+     text, scroll offset and selection are in)
 2. NativeTextView+PasteHandling: paste(_:) calls onWillPaste first. pasteAsPlainText(_:)
    (⌥⇧⌘V) is overridden: it inserts the plain-text flavor and bypasses onWillPaste and the
    engine's HTML conversion. validateUserInterfaceItem accepts saveDocument:.
@@ -45,3 +50,39 @@ Changes by Marc (all marked with `// Marc:` or in files starting with a Marc com
 10. NativeTextView+FrameAndOverscroll: scrollRangeToVisible uses the engine's explicit reveal in
    full-width mode too (upstream: reading column only). Native NSTextView reveal does not scroll
    through the NativeTextViewContainer document view, so arrow keys did not scroll the document.
+11. MarkdownEditorTheme: new colors codeBlockBackground, codeBlockLanguage, inlineCodeBackground,
+   inlineCodeText, blockquoteBar, blockquoteBackground, blockquoteText, tableBorder,
+   tableHeaderBackground, tableStripeBackground, and the helper NSColor.overlay(dark:light:).
+   Upstream took the code fill from the syntax highlighter and drew quote bars, quote text and
+   table lines in mutedText.
+12. Code blocks are marked with a new `.codeBlockBackground` attribute (theme color), and
+   MarkdownTextLayoutFragment finds them by that attribute. Upstream compared `.backgroundColor`
+   with SyntaxHighlighter.backgroundColor(); that protocol method, the styler's codeBackground /
+   codeBackgroundColor fields and the table codeBackgroundColor parameters are removed.
+   Also new: CodeBlockStyle.backgroundOutset (default 0) lets the fill reach past the text
+   column; fill edges round to the pixel instead of floor/ceil (no seam with translucent fills);
+   while the opening fence is hidden, its language is drawn in the block's top-right corner
+   (`.codeBlockLanguage` attribute).
+13. Inline code: a rounded pill drawn by the fragment (`.inlineCodeBackground` attribute) instead
+   of a `.backgroundColor` glyph-box fill; hidden backticks get a kern so the pill has padding.
+   Table cells keep a glyph-box fill (theme.inlineCodeBackground) because they are rasterized.
+14. Block quotes: MarkdownASTStyler.styleBlockquote collects lines first and tags each line with
+   `.blockquoteEdges` (where each level's panel opens and closes). The fragment draws an
+   optional rounded panel (theme.blockquoteBackground, BlockquoteStyle.panelPadding) with the
+   bar at its left edge; this replaces drawBlockquoteBars. blockquoteIndentPerLevel is 20
+   (upstream 18); text indent is level × indent (upstream plus half a level).
+15. Tables: drawn as a card with a rounded outline, header fill and striped body rows (theme
+   colors). Upstream drew a square border with column and row separators. The table image cache
+   key includes the new colors.
+16. OverscrollPolicy.percent default is 0.25 (upstream 0.5).
+17. Raw source mode: light highlighting (Styling/SourceHighlighter.swift, new) on rebuild and,
+   after each edit, for the edited lines, their neighbors and touching code blocks
+   (NativeTextViewCoordinator.highlightRawSource). Base attributes come from a memoized
+   makeBaseAttributes. BlockLevelTokenizer.isTableSeparator and incrementalBacktickCensus are
+   internal (upstream private) for this.
+18. Per-document text binding: the coordinator takes the wrapper's current binding on every
+   updateNSView (setTextBinding), and edits go through scheduleTextPush to the binding of the
+   document that made them, also when the embedder switched documents before the push. The
+   outgoing undo snapshot comes from the synchronous storage, not lastSyncedText. The selection
+   of each document is saved on switch-away, restored (clamped) on switch-back, and pruned with
+   the undo stacks. With wiki links off, a raw mode toggle keeps the undo stack.
