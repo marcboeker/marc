@@ -4,12 +4,9 @@
   <img src="docs/app-icon.png" alt="Marc app icon" width="128">
 </p>
 
-A small Markdown window for the terminal. Type `marc notes.md`, and the file opens in a native
-macOS window with a live preview. Marc is a free macOS app.
+A small Markdown window for the terminal. Type `marc notes.md`, and the file opens in a native macOS window with a live preview. Marc is a free macOS app.
 
-Marc has a very limited feature set, and it is very opinionated. It is mostly a graphical user
-interface that you control from the command line, and only then a Markdown editor. It is not a
-fully featured Markdown editor, and it will not become one.
+Marc has a very limited feature set, and it is very opinionated. It is mostly a graphical user interface that you control from the command line, and only then a Markdown editor. It is not a fully featured Markdown editor, and it will not become one.
 
 <p align="center">
   <img src="docs/marc.png" alt="Marc shows a pizza dough recipe with headings, lists, a quote, and tasks. Two small lint icons in the right margin mark a heading level jump and a broken link." width="480">
@@ -17,9 +14,7 @@ fully featured Markdown editor, and it will not become one.
 
 ## Why Marc
 
-I live in the terminal. For code, a terminal editor is good. For Markdown, I want to see the text
-the way that it reads: headings, lists, links, and images. The big Markdown apps have libraries,
-sync, themes, and plugins. I only want to open a file, write, and close the window.
+I live in the terminal. For code, a terminal editor is good. For Markdown, I want to see the text the way that it reads: headings, lists, links, and images. The big Markdown apps have libraries, sync, themes, and plugins. I only want to open a file, write, and close the window.
 
 ## Opinions
 
@@ -60,9 +55,7 @@ marc https://example.com  # load a web page as Markdown into a new, unsaved docu
 ```
 
 - A missing file is made empty before it opens. Its folder must exist.
-- A web page URL gives a new, unsaved document. Marc keeps only the main content of the page, and
-  it removes navigation and footers. When you save, Marc proposes a file name from the first
-  heading.
+- A web page URL gives a new, unsaved document. Marc keeps only the main content of the page, and it removes navigation and footers. When you save, Marc proposes a file name from the first heading.
 - Options such as `-n` (new app instance) or `-g` (keep the terminal in front) go to `open`.
 
 ## Features
@@ -74,6 +67,8 @@ marc https://example.com  # load a web page as Markdown into a new, unsaved docu
 - **Drag and drop** — drop an image or a file to insert a relative link.
 - **Paste from the web** — `⌘V` changes copied HTML into Markdown.
 - **Preview and source** — a rendered preview, a side-by-side view, and a raw Markdown view.
+- **Command launcher** — `⇧⌘P` finds menu commands and files by name. The ones you used last
+  come first.
 - **Print and PDF** — most Markdown editors cannot print. Marc prints the rendered document
   (`⌘P`) and exports it as PDF.
 
@@ -106,6 +101,13 @@ These shortcuts change the view:
 | `⌥⌘P` | Side by Side: editor and rendered document |
 | `⌥⌘U` | Show Markdown Source: all syntax, one font size |
 | `⌃⌘S` | Sidebar |
+
+More shortcuts:
+
+| Shortcut | Action |
+| --- | --- |
+| `⇧⌘P` | Command Launcher: type to find a menu command or a file, `Return` runs it |
+| `⌥⇧⌘P` | Page Setup |
 
 ## Development
 

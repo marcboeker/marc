@@ -5,6 +5,9 @@ import SwiftUI
 /// Replaces the DocumentGroup items: there are no document windows, so the menu acts on the
 /// selected file in `OpenFiles`.
 struct FileCommands: Commands {
+    /// The pin toggle's two titles; the launcher counts them as one command (`PaletteItem.titleAliases`).
+    nonisolated static let pinTitle = "Pin File", unpinTitle = "Unpin File"
+
     @FocusedValue(\.editorController) private var controller
     @Environment(\.openWindow) private var openWindow
     private var files = OpenFiles.shared
@@ -41,7 +44,7 @@ struct FileCommands: Commands {
             Button("Move To…") { files.selected?.move(nil) }
                 .disabled(files.selected == nil)
             // An untitled file has no place to point to, so it cannot be pinned.
-            Button(files.pins.isPinned(files.selected?.url) ? "Unpin File" : "Pin File") {
+            Button(files.pins.isPinned(files.selected?.url) ? Self.unpinTitle : Self.pinTitle) {
                 if let file = files.selected { files.togglePin(file) }
             }
             .keyboardShortcut("d")

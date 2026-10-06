@@ -34,6 +34,7 @@ struct FontSizeCommands: Commands {
                   event.charactersIgnoringModifiers == "="
             else { return event }
             AppearanceSettings.shared.stepFontSize(by: 1)
+            CommandRecency.shared.record("View/Bigger")   // no menu, so no didSendActionNotification
             return nil
         }
     }

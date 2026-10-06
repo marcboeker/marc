@@ -112,6 +112,10 @@ struct FormatCommands: Commands {
             Divider()
             item(.codeBlock)
             item(.rule)
+            Divider()
+            // The same cleanup as ⌘S; the launcher lists it with the other menu items.
+            Button("Lint Document") { controller?.formatForSave() }
+                .disabled(controller?.editorIsHidden ?? true)
         }
     }
 

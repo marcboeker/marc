@@ -7,17 +7,25 @@ import SwiftUI
 @MainActor
 @Observable
 final class OpenFiles {
-    static let shared = OpenFiles()
+    static let shared = OpenFiles(recency: .shared)
 
     /// The pinned files. They lead the sidebar order (see `sidebarOrder`).
     @ObservationIgnored let pins: Pins
 
-    init(pins: Pins = .shared) {
+    /// Counts each switch to a file (sidebar, ⇧⌘[ ], ⌥⌘1 to ⌥⌘9, Finder, the launcher) for the launcher.
+    @ObservationIgnored private let recency: CommandRecency?
+
+    init(pins: Pins = .shared, recency: CommandRecency? = nil) {
         self.pins = pins
+        self.recency = recency
     }
 
     private(set) var files: [MarcFile] = []
-    var selectedID: MarcFile.ID?
+    var selectedID: MarcFile.ID? {
+        didSet {
+            if selectedID != oldValue, let selected { recency?.record(PaletteItem.key(for: selected)) }
+        }
+    }
     /// For File > Open Recent. Updated by MarcDocumentController.
     var recentURLs: [URL] = []
     /// Set by `activate` when a pin's file is gone. ContentView shows it, then clears it.
