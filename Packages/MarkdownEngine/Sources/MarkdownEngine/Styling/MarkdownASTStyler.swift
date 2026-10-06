@@ -62,6 +62,7 @@ enum MarkdownASTStyler {
             baseLineHeight: baseLineHeight,
             baseParagraphSpacing: baseParagraphSpacing,
             codeFont: codeFont,
+            // Marc: `codeBackground` removed; code fills come from the theme.
             codeParagraphStyle: codePara,
             inlineMarkerFont: NSFont(name: fontName, size: hiddenSize) ?? .systemFont(ofSize: hiddenSize),
             caret: caretLocation,
@@ -614,6 +615,7 @@ enum MarkdownASTStyler {
         let baseLineHeight: CGFloat
         let baseParagraphSpacing: CGFloat
         let codeFont: NSFont
+        // Marc: `codeBackground` removed.
         let codeParagraphStyle: NSParagraphStyle
         let inlineMarkerFont: NSFont
         let caret: Int
@@ -734,6 +736,9 @@ enum MarkdownASTStyler {
 
     /// Per-line blockquote: indent, color content, hide/show `>` markers, tag each line with its bar level
     /// and where each level's panel starts and ends.
+    // Marc: rewritten in two passes (collect lines, then style) so each line knows its neighbours'
+    // levels for `.blockquoteEdges`. Also changed: text indent level × indentPerLevel (upstream
+    // + half a level), panel padding and tail indent, content in `theme.blockquoteText` (upstream mutedText).
     private static func styleBlockquote(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
         struct QuoteLine {
             let line: NSRange, markerRange: NSRange, contentRange: NSRange, tokenRange: NSRange, level: Int
@@ -813,6 +818,7 @@ enum MarkdownASTStyler {
 
     private static func styleCodeBlock(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
         let parts = codeBlockParts(range, ctx.ns)
+        // Marc: `.codeBlockBackground` from the theme (upstream `.backgroundColor` from the highlighter).
         attrs.append((parts.codeRange, [
             .font: ctx.codeFont, .codeBlockBackground: ctx.theme.codeBlockBackground,
             .paragraphStyle: ctx.codeParagraphStyle,
@@ -833,7 +839,7 @@ enum MarkdownASTStyler {
             : [.foregroundColor: NSColor.clear, .font: ctx.codeFont]   // hiddenMarkerFont == codeFont
         attrs.append((parts.openFence, markerAttrs))
         attrs.append((parts.closeFence, markerAttrs))
-        // The fence hides its language, so the fragment shows it in the corner.
+        // Marc: the fence hides its language, so the fragment shows it in the corner.
         if !ctx.isActive(range), let language = parts.language, !language.isEmpty, parts.openFence.length > 0 {
             attrs.append((NSRange(location: parts.openFence.location, length: 1), [.codeBlockLanguage: language]))
         }
@@ -906,6 +912,8 @@ enum MarkdownASTStyler {
                 styleInlines(node.children, font: font, ctx: ctx, into: &attrs)
 
             case .code(let range, let contentRange):
+                // Marc: no `.backgroundColor`; the fragment draws a pill from `.inlineCodeBackground`.
+                // `theme.inlineCodeText` is new.
                 var contentAttrs: [NSAttributedString.Key: Any] = [.font: ctx.codeFont]
                 if let ink = ctx.theme.inlineCodeText { contentAttrs[.foregroundColor] = ink }
                 attrs.append((contentRange, contentAttrs))
@@ -917,7 +925,7 @@ enum MarkdownASTStyler {
                     : [.foregroundColor: ctx.theme.mutedText.withAlphaComponent(ctx.config.markers.inlineCodeMarkerAlpha),
                        .font: ctx.inlineMarkerFont]
                 for marker in markers(of: range, content: contentRange) { attrs.append((marker, markerAttrs)) }
-                if contentRange.length > 0 {
+                if contentRange.length > 0 { // Marc: pill attribute and padding kern
                     attrs.append((range, [.inlineCodeBackground: ctx.theme.inlineCodeBackground]))
                     // Hidden backticks are ~0 wide: kern the opening one and the
                     // last code character so the pill has room inside its edges.

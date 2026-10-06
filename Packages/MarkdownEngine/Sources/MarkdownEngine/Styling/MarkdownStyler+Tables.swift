@@ -61,6 +61,7 @@ extension MarkdownStyler {
 
     private static func themeKeyPrefix(ctx: StylingContext, appearance: NSAppearance) -> String {
         let theme = ctx.configuration.theme
+        // Marc: the inline code and table theme colors replace `codeBackgroundColor` here and in `prefix`.
         let identity = "\(ctx.baseFont.fontName)|\(ctx.baseFont.pointSize)|\(appearance.name.rawValue)|"
             + "\(ObjectIdentifier(theme.bodyText))|\(ObjectIdentifier(theme.mutedText))|"
             + "\(ObjectIdentifier(theme.highlightColor))|\(ObjectIdentifier(theme.inlineCodeBackground))|"
@@ -482,7 +483,7 @@ extension MarkdownStyler {
                     out.addAttributes(attributes, range: span)
                 }
             case .code(_, let content):
-                // Rasterized text has no pill drawing: the glyph-box fill stands in.
+                // Marc: rasterized text has no pill drawing: the glyph-box fill stands in.
                 out.append(NSAttributedString(string: ns.substring(with: content), attributes: [
                     .font: codeFont, .backgroundColor: theme.inlineCodeBackground,
                     .foregroundColor: theme.inlineCodeText ?? theme.bodyText
@@ -513,6 +514,7 @@ extension MarkdownStyler {
 
     // MARK: - Rendering
 
+    // Marc: `codeBackgroundColor` parameter removed here, in formattedCellString and in appendInlineCell.
     private static func renderTable(
         _ table: ParsedTable,
         baseFont: NSFont,
@@ -526,6 +528,7 @@ extension MarkdownStyler {
         let cellHPadding: CGFloat = 12
         let cellVPadding: CGFloat = 6
         let borderWidth: CGFloat = 1
+        // Marc: colors from the theme (upstream mutedText at 0.5 / 0.08 alpha).
         // Resolve under the real appearance: the image draws later, under whatever appearance is current then.
         func resolved(_ color: NSColor) -> NSColor {
             var out = color
@@ -680,6 +683,7 @@ extension MarkdownStyler {
 
         // Flipped image so AppKit handles the y-flip; a manual transform mirror would flip glyphs too.
         return NSImage(size: size, flipped: true) { _ in
+            // Marc: upstream drew a square outer border and column/row separator lines.
             // A card: rounded outline, filled header, every second body row
             // striped. Column and row gaps stay in the layout but draw nothing.
             let card = NSRect(x: borderWidth / 2, y: borderWidth / 2,

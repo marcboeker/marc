@@ -67,26 +67,15 @@ marc https://example.com  # load a web page as Markdown into a new, unsaved docu
 
 ## Features
 
-- **Documents** — open, save, recent files, and window tabs, the same as in other macOS apps.
-  `.md` and `.markdown` files.
-- **Outline** — a sidebar with the headings of the document. Toggle it with `⌃⌘S`. Click a
-  heading to go to it.
-- **Pinned files** — pin a file with `⌥⌘P` or a right-click in the sidebar. Pins stay at the top
-  of the sidebar, also after you close the file or quit Marc. `⌥⌘1` to `⌥⌘9` open them.
-- **Drag and drop** — drop an image, and Marc writes `![name](path)`. Drop a different file, and
-  Marc writes a link. The path is relative to the Markdown file.
-- **Paste from the web** — `⌘V` changes copied HTML into Markdown. `⌥⇧⌘V` pastes plain text.
-- **Rendered preview** — **View → Preview** (`⌃⌘P`) shows the rendered document in place of the
-  editor. **View → Side by Side** (`⌘\`) shows the editor on the left and the rendered document on
-  the right; the preview follows the editor when you scroll. Press the same shortcut again to go
-  back to the editor. Links to `.md` files open in Marc, web and mail links in their default app,
-  and other files show in Finder.
-- **Markdown source** — **View → Show Markdown Source** (`⌥⌘U`) shows all Markdown syntax, with
-  one font size and light colors. Press it again for the live preview editor.
-- **Find and replace** — `⌘F` and `⌥⌘F`. In the full preview, `⌘F` finds in the rendered text.
-- **Print and PDF** — `⌘P` prints the document with a clean print style, and **File → Export as
-  PDF…** writes a PDF. Relative images show.
-- **Window size** — a new window opens at the size and position of the last window.
+- **Command line** — open files and web pages from the terminal. See
+  [The `marc` command](#the-marc-command).
+- **Outline** — a sidebar with the headings of the document.
+- **Pinned files** — keep files at the top of the sidebar. `⌘D` pins, `⌥⌘1` to `⌥⌘9` open.
+- **Drag and drop** — drop an image or a file to insert a relative link.
+- **Paste from the web** — `⌘V` changes copied HTML into Markdown.
+- **Preview and source** — a rendered preview, a side-by-side view, and a raw Markdown view.
+- **Print and PDF** — most Markdown editors cannot print. Marc prints the rendered document
+  (`⌘P`) and exports it as PDF.
 
 ## Shortcuts
 
@@ -114,25 +103,23 @@ These shortcuts change the view:
 | Shortcut | View |
 | --- | --- |
 | `⌃⌘P` | Preview: the rendered document in place of the editor |
-| `⌘\` | Side by Side: editor and rendered document |
+| `⌥⌘P` | Side by Side: editor and rendered document |
 | `⌥⌘U` | Show Markdown Source: all syntax, one font size |
 | `⌃⌘S` | Sidebar |
 
 ## Development
 
-```sh
-make run     # build a debug version and open it
-make test    # run the unit tests
-make build   # build only
-make clean   # remove the build output
-```
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-The editor is a fork of [swift-markdown-engine](https://github.com/nodes-app/swift-markdown-engine)
-in `Packages/MarkdownEngine`. Marc also uses [swift-markdown](https://github.com/swiftlang/swift-markdown)
-for format and lint, [Demark](https://github.com/steipete/Demark) for HTML to Markdown, and
-[swift-cmark](https://github.com/swiftlang/swift-cmark) for print and the rendered preview. See [DESIGN.md](DESIGN.md) for
-the design.
+## Credits
+
+The editor and its live preview use
+[swift-markdown-engine](https://github.com/nodes-app/swift-markdown-engine). Marc includes a modified copy in
+[Packages/MarkdownEngine](Packages/MarkdownEngine). The changes are listed in its
+[NOTICE](Packages/MarkdownEngine/NOTICE) file.
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). The Markdown engine in
+[Packages/MarkdownEngine](Packages/MarkdownEngine) has the Apache License 2.0, see
+[its LICENSE](Packages/MarkdownEngine/LICENSE).

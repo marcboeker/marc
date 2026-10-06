@@ -41,6 +41,7 @@ extension MarkdownStyler {
         let baseFont: NSFont
         let layoutBridge: LayoutBridge?
         let baseDefaultLineHeight: CGFloat
+        // Marc: `codeBackgroundColor` removed; code fills come from the theme.
         let latexMarkerFont: NSFont
         let configuration: MarkdownEditorConfiguration
         let wikiLinkIDProvider: (NSRange) -> String?

@@ -186,6 +186,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         onPersistScrollOffset: ((String, CGFloat) -> Void)? = nil,
         restoreScrollOffset: ((String) -> CGFloat?)? = nil,
         isCursorExcluded: ((CGPoint) -> Bool)? = nil,
+        // Marc: embedder hooks.
         onTextViewReady: ((NSTextView) -> Void)? = nil,
         onWillPaste: ((NSTextView, NSPasteboard) -> Bool)? = nil,
         onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)? = nil,
@@ -217,6 +218,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         self.onPersistScrollOffset = onPersistScrollOffset
         self.restoreScrollOffset = restoreScrollOffset
         self.isCursorExcluded = isCursorExcluded
+        // Marc: embedder hooks.
         self.onTextViewReady = onTextViewReady
         self.onWillPaste = onWillPaste
         self.onDropFiles = onDropFiles
@@ -466,6 +468,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             }
             // Evict undo stacks, content snapshots and selections for documents no
             // longer retained (keep the current one); clear actions before dropping.
+            // Marc: selections added.
             let staleUndoKeys = Set(context.coordinator.undoManagers.keys)
                 .union(context.coordinator.undoContentSnapshots.keys)
                 .union(context.coordinator.selections.keys)
@@ -761,6 +764,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             let location = min(saved.location, length)
             textView.setSelectedRange(NSRange(location: location, length: min(saved.length, length - location)))
         }
+        // Marc: `onDocumentShown`, once per document, after text, scroll and selection are in.
         if context.coordinator.shownDocumentId != documentId {
             context.coordinator.shownDocumentId = documentId
             if let onDocumentShown {
