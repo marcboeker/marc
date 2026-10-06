@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// View > Preview (⌃⌘P) and Side by Side (⌥⌘P), below Show Sidebar. A check mark shows the active mode.
-/// ⌃⌘P and ⌥⌘P are free: Print is ⌘P, Page Setup ⇧⌘P, and the engine binds neither.
+/// ⌃⌘P and ⌥⌘P are free: Print is ⌘P, the command launcher ⇧⌘P, Page Setup ⌥⇧⌘P, and the engine binds neither.
 struct PreviewCommands: Commands {
     @FocusedValue(\.editorController) private var controller
 

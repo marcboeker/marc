@@ -25,6 +25,7 @@ struct MarcApp: App {
             FormatCommands()            // Features/Shortcuts
             PrintCommands()             // Features/Print
             CommandLineToolCommands()   // App/CommandLineTool.swift
+            LauncherCommands()          // Features/CommandPalette: View > Command Launcher… ⇧⌘P
         }
         Settings {
             AppearanceSettingsView()    // Features/Appearance
@@ -40,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         FontSizeCommands.installEqualsShortcut()
+        CommandRecency.shared.observeMenus()
     }
 
     /// Files from Finder, the Dock and `open -a Marc`; `marc://clip?…` from the `marc` script (see WebClip).

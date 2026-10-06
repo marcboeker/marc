@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// File > Page Setup…, Export as PDF…, Print… (⌘P). Replaces the system items, which print the
+/// File > Page Setup… (⌥⇧⌘P; ⇧⌘P is the command launcher), Export as PDF…, Print… (⌘P). Replaces the system items, which print the
 /// editor view itself (screen colours, window width, hidden syntax).
 struct PrintCommands: Commands {
     @FocusedValue(\.editorController) private var controller
@@ -10,7 +10,7 @@ struct PrintCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .printItem) {
             Button("Page Setup…") { NSApp.runPageLayout(nil) }
-                .keyboardShortcut("p", modifiers: [.command, .shift])
+                .keyboardShortcut("p", modifiers: [.command, .option, .shift])
             Button("Export as PDF…") { controller?.exportPDF() }
                 .disabled(controller == nil)
             Button("Print…") { controller?.startPrintJob(.printPanel) }

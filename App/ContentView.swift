@@ -40,6 +40,7 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.25), value: files.missingPinNotice)
+        .overlay(alignment: .top) { LauncherOverlay() }   // ⇧⌘P
         .focusedSceneValue(\.editorController, files.selected == nil ? nil : controller)
         .onAppear {
             files.editor = controller
