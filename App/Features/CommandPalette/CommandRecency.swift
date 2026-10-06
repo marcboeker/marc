@@ -8,21 +8,20 @@ final class CommandRecency {
 
     private(set) var keys: [String]
 
+    private static let key = "commandRecency"
     private let defaults: UserDefaults
-    private let key: String
     private let limit: Int
 
-    init(defaults: UserDefaults = .standard, key: String = "commandRecency", limit: Int = 50) {
+    init(defaults: UserDefaults = .standard, limit: Int = 50) {
         self.defaults = defaults
-        self.key = key
         self.limit = limit
-        keys = defaults.stringArray(forKey: key) ?? []
+        keys = defaults.stringArray(forKey: Self.key) ?? []
     }
 
     /// Move the key to the front, or add it there. The oldest keys fall off past `limit`.
     func record(_ recent: String) {
         keys = Array(([recent] + keys.filter { $0 != recent }).prefix(limit))
-        defaults.set(keys, forKey: key)
+        defaults.set(keys, forKey: Self.key)
     }
 
     /// Count every menu command: clicks, shortcuts and launcher runs all post `didSendActionNotification`.

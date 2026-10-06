@@ -20,7 +20,7 @@ enum PastePolicy {
         html.contains(/(?i)<(a|b|strong|i|em|u|s|del|strike|h[1-6]|ul|ol|li|pre|code|img|table|blockquote|hr)[\s>\/]/)
     }
 
-    static func visibleText(_ html: String) -> String {
+    private static func visibleText(_ html: String) -> String {
         var text = html.replacing(/(?is)<(head|style|script)\b.*?<\/\1>/, with: "")
         text = text.replacing(/(?i)<br\s*\/?>/, with: " ")
         text = text.replacing(/<[^>]*>/, with: "")
