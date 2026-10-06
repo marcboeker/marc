@@ -18,14 +18,9 @@ enum PrintRenderer {
         </style>
         </head>
         <body>
-        \(body(markdown: FrontMatterSplit.split(markdown).body))</body>
+        \(MarkdownHTML.render(FrontMatterSplit.split(markdown).body))</body>
         </html>
         """
-    }
-
-    /// GFM → HTML fragment, without source positions (see MarkdownHTML).
-    static func body(markdown: String) -> String {
-        MarkdownHTML.render(markdown)
     }
 
     /// Always light, whatever the system appearance. Page margins come from NSPrintInfo.

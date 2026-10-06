@@ -67,27 +67,13 @@ enum MarkdownFormatting {
 
     /// Map a UTF-16 location to the same line and column in `new`, clamped to the line end.
     static func mapLocation(_ location: Int, from old: String, to new: String) -> Int {
-        let oldText = old as NSString
-        let newText = new as NSString
-        let location = min(max(location, 0), oldText.length)
-        var line = 0
-        var lineStart = 0
-        var i = 0
-        while i < location {
-            if oldText.character(at: i) == 0x0A { line += 1; lineStart = i + 1 }
-            i += 1
-        }
-        let column = location - lineStart
-
-        var newStart = 0
-        for _ in 0..<line {
-            let r = newText.range(of: "\n", range: NSRange(location: newStart, length: newText.length - newStart))
-            if r.location == NSNotFound { return newText.length }
-            newStart = r.location + 1
-        }
-        let r = newText.range(of: "\n", range: NSRange(location: newStart, length: newText.length - newStart))
-        let newEnd = r.location == NSNotFound ? newText.length : r.location
-        return min(newStart + column, newEnd)
+        let location = min(max(location, 0), old.utf16.count)
+        let head = (old as NSString).substring(to: location).components(separatedBy: "\n")
+        let lines = new.components(separatedBy: "\n")
+        let line = head.count - 1
+        guard line < lines.count else { return new.utf16.count }
+        let lineStart = lines[..<line].reduce(0) { $0 + $1.utf16.count + 1 }
+        return lineStart + min(head[line].utf16.count, lines[line].utf16.count)
     }
 }
 

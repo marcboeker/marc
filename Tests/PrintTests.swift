@@ -3,7 +3,7 @@ import Testing
 @testable import Marc
 
 struct PrintTests {
-    private func html(_ s: String) -> String { PrintRenderer.body(markdown: s) }
+    private func html(_ s: String) -> String { MarkdownHTML.render(s) }
 
     @Test func escapesCodeAndText() {
         #expect(html("```\n<div>&</div>\n```\n") == "<pre><code>&lt;div&gt;&amp;&lt;/div&gt;\n</code></pre>\n")

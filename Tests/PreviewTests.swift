@@ -15,8 +15,7 @@ struct PreviewTests {
     }
 
     @Test func printHasNoSourcePositions() {
-        #expect(PrintRenderer.body(markdown: "# T\n") == "<h1>T</h1>\n")
-        #expect(MarkdownHTML.render("# T\n") == PrintRenderer.body(markdown: "# T\n"))
+        #expect(MarkdownHTML.render("# T\n") == "<h1>T</h1>\n")
     }
 
     @Test func previewFollowsDarkModeButPrintStaysLight() {

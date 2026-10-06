@@ -274,7 +274,7 @@ struct CommandPaletteTests {
     }
 
     private func recency(limit: Int = 50) -> CommandRecency {
-        CommandRecency(defaults: UserDefaults(suiteName: suite)!, key: "recency", limit: limit)
+        CommandRecency(defaults: UserDefaults(suiteName: suite)!, limit: limit)
     }
 
     @Test func recordPutsTheKeyInFront() {

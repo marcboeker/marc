@@ -13,19 +13,14 @@ enum FileLabels {
     static func labels(for files: [(url: URL?, displayName: String)]) -> [Label] {
         let names = files.map { $0.url?.deletingPathExtension().lastPathComponent ?? $0.displayName }
         // Parent folders, nearest first.
-        let parents = files.map { file in
-            file.url.map { Array($0.deletingLastPathComponent().pathComponents.filter { $0 != "/" }.reversed()) } ?? []
-        }
-        return files.indices.map { index in
-            let name = names[index]
-            let others = files.indices.filter { $0 != index && names[$0].lowercased() == name.lowercased() }
-            guard !others.isEmpty, files[index].url != nil else { return Label(name: name, folder: nil) }
-            for depth in parents[index].indices.map({ $0 + 1 }) {
-                let folder = path(parents[index], depth)
-                if others.allSatisfy({ path(parents[$0], depth) != folder }) { return Label(name: name, folder: folder) }
-            }
-            // All its folders are the end of another file's folders (/a vs /b/a): the full path.
-            return Label(name: name, folder: "/" + path(parents[index], parents[index].count))
+        let parents = files.map { $0.url.map { Array($0.deletingLastPathComponent().pathComponents.filter { $0 != "/" }.reversed()) } ?? [] }
+        return files.indices.map { i in
+            let others = files.indices.filter { $0 != i && names[$0].lowercased() == names[i].lowercased() }
+            guard !others.isEmpty, files[i].url != nil else { return Label(name: names[i], folder: nil) }
+            // The fewest folders that tell it from the rest; if none do (/a vs /b/a), the full path.
+            let folder = parents[i].indices.map { path(parents[i], $0 + 1) }
+                .first { f in others.allSatisfy { path(parents[$0], f.split(separator: "/").count) != f } }
+            return Label(name: names[i], folder: folder ?? "/" + path(parents[i], parents[i].count))
         }
     }
 
