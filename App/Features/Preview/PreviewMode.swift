@@ -6,7 +6,7 @@ enum PreviewMode: Equatable {
     case editor
     /// The rendered preview in place of the editor (View > Preview, ⌃⌘P).
     case overlay
-    /// Editor left, rendered preview right (View > Side by Side, ⌘\).
+    /// Editor left, rendered preview right (View > Side by Side, ⌥⌘P).
     case split
 
     /// The mode after the key of `target` is pressed: the same key again goes back to the editor,
