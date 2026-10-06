@@ -1,13 +1,13 @@
 cask "marc" do
-  version "0.0.0"
+  version "0.1.1"
 
   on_arm do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    sha256 "3368b70fe57ab090dedbca986250f96576b052a6b1301265420470e72baa9843"
     url "https://github.com/marcboeker/marc/releases/download/v#{version}/Marc-macos-arm64.zip"
   end
 
   on_intel do
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    sha256 "b15f51a2b78f88b7af778883517e8699f41d014871dc399230a2e8585b2f51c3"
     url "https://github.com/marcboeker/marc/releases/download/v#{version}/Marc-macos-amd64.zip"
   end
 
