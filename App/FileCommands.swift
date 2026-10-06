@@ -44,7 +44,7 @@ struct FileCommands: Commands {
             Button(files.pins.isPinned(files.selected?.url) ? "Unpin File" : "Pin File") {
                 if let file = files.selected { files.togglePin(file) }
             }
-            .keyboardShortcut("p", modifiers: [.command, .option])
+            .keyboardShortcut("d")
             .disabled(files.selected?.url == nil)
         }
         CommandGroup(before: .windowArrangement) {
