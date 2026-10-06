@@ -36,20 +36,18 @@ Marc makes the decisions for you. There are no settings.
 
 ## Install
 
-macOS 26 or later, and Xcode 27 to build. There is no binary release. Build and install from
-source:
+Marc needs macOS 26 or later. Install it with Homebrew:
 
 ```sh
-git clone https://github.com/marcboeker/marc
-cd marc
-make install
+brew tap marcboeker/marc https://github.com/marcboeker/marc
+brew trust --cask marcboeker/marc/marc
+brew install --cask marc
 ```
 
-This copies `Marc.app` to `/Applications` and puts a symbolic link to the `marc` command in
-`~/.local/bin`. Make sure that `~/.local/bin` is in your `PATH`. To use a different folder, set
-`PREFIX`, for example `make install PREFIX=/usr/local`.
+This installs `Marc.app` to `/Applications` and puts the `marc` command in the Homebrew `bin`
+folder.
 
-You can also install the command later from the app: **Marc → Install Command Line Tool…**.
+To build Marc yourself, see [docs/BUILD.md](docs/BUILD.md).
 
 ## The `marc` command
 
