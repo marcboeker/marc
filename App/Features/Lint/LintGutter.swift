@@ -94,21 +94,22 @@ final class LintGutter {
 
     @objc private func toggleMessage(_ sender: IssueButton) {
         if let popover, popover.isShown { popover.close(); if popover.contentViewController?.representedObject as? IssueButton === sender { return } }
+        let icon = NSImageView(image: NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Warning")?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .regular)) ?? NSImage())
+        icon.contentTintColor = .systemOrange
         let label = NSTextField(wrappingLabelWithString: sender.issue.message)
-        label.font = .systemFont(ofSize: 11)
-        label.textColor = .secondaryLabelColor
-        label.preferredMaxLayoutWidth = 260
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .labelColor
+        label.preferredMaxLayoutWidth = 240
+        let stack = NSStackView(views: [icon, label])
+        stack.orientation = .horizontal
+        stack.alignment = .top
+        stack.spacing = 6
+        stack.edgeInsets = NSEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
         let holder = NSViewController()
         holder.representedObject = sender
-        holder.view = NSView()
-        holder.view.addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: holder.view.leadingAnchor, constant: 8),
-            label.trailingAnchor.constraint(equalTo: holder.view.trailingAnchor, constant: -8),
-            label.topAnchor.constraint(equalTo: holder.view.topAnchor, constant: 6),
-            label.bottomAnchor.constraint(equalTo: holder.view.bottomAnchor, constant: -6),
-        ])
+        holder.view = stack
+        holder.preferredContentSize = stack.fittingSize
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = false
@@ -128,10 +129,9 @@ private final class IssueButton: NSButton {
         isBordered = false
         title = ""
         imagePosition = .imageOnly
-        image = NSImage(systemSymbolName: "exclamationmark.circle", accessibilityDescription: "Lint issue")?
+        image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Lint issue")?
             .withSymbolConfiguration(.init(pointSize: 10, weight: .regular))
-        contentTintColor = .tertiaryLabelColor
-        alphaValue = 0.7
+        contentTintColor = .systemOrange
         focusRingType = .none
         toolTip = issue.message
     }
