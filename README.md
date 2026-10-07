@@ -10,7 +10,9 @@ A small Markdown window for the terminal. Type `marcdown notes.md`, and the file
   <img src="assets/marcdown.gif" alt="Marcdown in use: a terminal command opens a Markdown file in a native window with live preview." width="720">
 </p>
 
-Marcdown is an opinionated Markdown editor, and that is why it is not called "Markdown". It is called Marcdown because it is my editor (I am Marc), and it follows my opinions about how Markdown should look and work. You do not have to share them. There are no settings to change them.
+Marcdown is an opinionated Markdown editor. When my parents named me Marc, they had no idea they were also naming a Markdown editor. Decades later, I put their gift to use.
+
+Marcdown looks and works the way I think Markdown should. It offers what I always wanted in a Markdown editor. If you need something different, fork it and call it Johndown or Bobdown.
 
 Marcdown has a very limited feature set. It is mostly a graphical user interface that you control from the command line, and only then a Markdown editor. It is not a fully featured Markdown editor, and it will not become one.
 
