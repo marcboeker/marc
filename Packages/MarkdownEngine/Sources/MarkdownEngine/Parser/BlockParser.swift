@@ -17,9 +17,9 @@
 //    • heading        — headingRegex        `^\s*#{1,6} +…`
 //    • thematic break — styler HR pattern   `^\s*(-{3,}|\*{3,}|_{3,})\s*$`
 //    • fenced code    — column-0 ``` or ~~~ fence (3+), closed by a run of the
-//                       same character at least as long (Marc: tildes, close rule)
-//    • indented code  — 4-space/tab lines after a blank line, outside a list (Marc)
-//    • setext heading — paragraph lines underlined by `===` / `---` (Marc)
+//                       same character at least as long (Marcdown: tildes, close rule)
+//    • indented code  — 4-space/tab lines after a blank line, outside a list (Marcdown)
+//    • setext heading — paragraph lines underlined by `===` / `---` (Marcdown)
 //    • blockquote     — blockquoteRegex     `^[ \t]{0,3}(>…)`
 //
 
@@ -32,7 +32,7 @@ enum BlockKind: Equatable {
     case blockquote      // consecutive `>` lines, inline-bearing per line
     case list            // consecutive list-item lines (`-`/`*`/`+` or `1.`/`1)`)
     case fencedCode      // ```…``` or ~~~…~~~ — opaque (no inline parsing inside)
-    case indentedCode    // Marc: 4-space indented code — opaque, no fence lines
+    case indentedCode    // Marcdown: 4-space indented code — opaque, no fence lines
     case blockLatex      // $$…$$ — opaque
     case table           // GFM table — opaque (rendered as a unit)
     case thematicBreak   // `---` / `***` / `___` — produces no token today
@@ -230,7 +230,7 @@ enum BlockParser {
         let reparsed = computeBlocks(windowText, registry: registry,
                                      listContext: listContext(before: winFirst, blocks: oldBlocks, chars: o))
             .map { $0.shifted(by: winStart) }
-        // Marc: an indented block after the window reads the list context the window ends with
+        // Marcdown: an indented block after the window reads the list context the window ends with
         // (indented code vs. list continuation), and the splice cannot recompute it.
         if let next = oldBlocks[(winLast + 1)...].first(where: { $0.kind != .blank }),
            next.kind == .indentedCode || (next.kind == .paragraph && isIndent(o[next.range.location])) {
@@ -271,7 +271,7 @@ enum BlockParser {
         return (result, reparsed.count)
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// Whether the block at `index` starts inside a list: the nearest block above it (past blank
     /// lines and indented continuation paragraphs) is a list. Indented lines there continue the
     /// list; anywhere else they are code.
@@ -335,7 +335,7 @@ enum BlockParser {
         var i = 0
         while i < lines.count {
             let line = lineText(i)
-            // Marc: the list context for the NEXT block, from the one this pass appends.
+            // Marcdown: the list context for the NEXT block, from the one this pass appends.
             defer {
                 if let last = blocks.last {
                     switch last.kind {
@@ -354,7 +354,7 @@ enum BlockParser {
                 i = end + 1
 
             } else if !inList, isIndentedCode(line), blocks.last.map({ $0.kind == .blank }) ?? true {
-                // Marc: indented code. It cannot interrupt a paragraph (a blank line or the start
+                // Marcdown: indented code. It cannot interrupt a paragraph (a blank line or the start
                 // comes first) and inside a list the indent continues an item instead. Blank lines
                 // between code lines belong to the block; trailing ones do not.
                 var end = i
@@ -424,7 +424,7 @@ enum BlockParser {
                 var setext = false
                 while end + 1 < lines.count {
                     let next = lineText(end + 1)
-                    // Marc: a `===`/`---` underline turns the paragraph into a setext heading.
+                    // Marcdown: a `===`/`---` underline turns the paragraph into a setext heading.
                     if setextLevel(next) != nil { end += 1; setext = true; break }
                     if isBlank(next) || isThematicBreak(next)
                         || isHeading(next) || isBlockquote(next) || isListItem(next) { break }
@@ -450,7 +450,7 @@ enum BlockParser {
         line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    // Marc: fences of either character with the CommonMark close rule; upstream took any line
+    // Marcdown: fences of either character with the CommonMark close rule; upstream took any line
     // starting with ``` as an opening or closing fence.
 
     /// A code fence: its character (`` ` `` or `~`) and run length.
@@ -566,7 +566,7 @@ enum BlockParser {
 
     /// A block-LaTeX opener: a line whose content starts with `$$`.
     private static func isBlockLatexOpen(_ line: String) -> Bool {
-        guard MarkdownEngineFeatures.latex else { return false } // Marc:
+        guard MarkdownEngineFeatures.latex else { return false } // Marcdown:
         return line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("$$")
     }
 

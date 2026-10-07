@@ -1,5 +1,5 @@
-// Marc: process-wide switches for constructs the engine parses by default.
-// Defaults keep upstream behavior; Marc turns them off once at launch, before
+// Marcdown: process-wide switches for constructs the engine parses by default.
+// Defaults keep upstream behavior; Marcdown turns them off once at launch, before
 // any editor exists. Parse caches are not keyed on these, so never flip them
 // while an editor is alive.
 

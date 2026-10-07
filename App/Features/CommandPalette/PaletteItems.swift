@@ -123,7 +123,7 @@ enum MenuExclusion {
         "clearRecentDocuments:", "showHelp:",
     ]
 
-    /// Submenus and items by title. App-named items ("Hide Marc") are covered by their selectors only.
+    /// Submenus and items by title. App-named items ("Hide Marcdown") are covered by their selectors only.
     static let titles: Set<String> = [
         "Services", "Hide Others", "Show All",
         "Open Recent",

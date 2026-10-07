@@ -1,14 +1,14 @@
 import AppKit
 
-/// `Marc --clip <url>` runs headless for the `marc` script (see WebClip); anything else starts the app.
+/// `Marcdown --clip <url>` runs headless for the `marcdown` script (see WebClip); anything else starts the app.
 @main
 enum Main {
     static func main() {
         let arguments = CommandLine.arguments
         guard arguments.count > 1, arguments[1] == "--clip" else {
             // The first instance becomes NSDocumentController.shared; it must exist before the app starts.
-            _ = MainActor.assumeIsolated { MarcDocumentController() }
-            MarcApp.main()
+            _ = MainActor.assumeIsolated { MarcdownDocumentController() }
+            MarcdownApp.main()
             return
         }
         // WebKit needs a running app event loop; `.prohibited` keeps it out of the Dock.

@@ -4,47 +4,47 @@ import Foundation
 import Markdown
 import UniformTypeIdentifiers
 
-/// `marc <url>`: loads a web page, converts it to Markdown with Demark, opens it as a new untitled document.
-/// The `marc` script runs `Marc --clip <url>` headless, which writes the Markdown to a temporary file
-/// and prints a `marc://clip?file=<path>` URL; the script opens that URL in the app (see `open(_:)`).
+/// `marcdown <url>`: loads a web page, converts it to Markdown with Demark, opens it as a new untitled document.
+/// The `marcdown` script runs `Marcdown --clip <url>` headless, which writes the Markdown to a temporary file
+/// and prints a `marcdown://clip?file=<path>` URL; the script opens that URL in the app (see `open(_:)`).
 @MainActor
 enum WebClip {
-    /// Returns the exit status. On success, prints the `marc://clip` URL to stdout.
+    /// Returns the exit status. On success, prints the `marcdown://clip` URL to stdout.
     static func run(arguments: [String]) async -> Int32 {
         guard arguments.count == 1,
               let url = URL(string: arguments[0]),
               ["http", "https"].contains(url.scheme?.lowercased())
         else {
-            printError("usage: Marc --clip <http(s) url>")
+            printError("usage: Marcdown --clip <http(s) url>")
             return 64
         }
         do {
             let markdown = try await convert(url)
             let file = try writeTemporary(markdown, name: WebClipMarkdown.fileName(markdown: markdown, url: url))
             var clip = URLComponents()
-            clip.scheme = "marc"
+            clip.scheme = "marcdown"
             clip.host = "clip"
             clip.queryItems = [URLQueryItem(name: "file", value: file.path)]
             print(clip.url!.absoluteString)
             return 0
         } catch {
-            printError("marc: \(url.absoluteString): \(error.localizedDescription)")
+            printError("marcdown: \(url.absoluteString): \(error.localizedDescription)")
             return 1
         }
     }
 
-    /// Handles `marc://clip?file=<path>` in the app: a new untitled document with the file's text,
+    /// Handles `marcdown://clip?file=<path>` in the app: a new untitled document with the file's text,
     /// named like the file, so Save proposes `<slug>.md`. Deletes the temporary folder. Ignores other URLs.
     static func open(_ url: URL) {
-        guard url.scheme == "marc", url.host() == "clip",
+        guard url.scheme == "marcdown", url.host() == "clip",
               let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                   .queryItems?.first(where: { $0.name == "file" })?.value
         else { return }
-        // Only a file that `writeTemporary` made: any web page can open a marc:// URL, and the folder gets deleted.
+        // Only a file that `writeTemporary` made: any web page can open a marcdown:// URL, and the folder gets deleted.
         let file = URL(filePath: path).resolvedFileURL
         let folder = file.deletingLastPathComponent()
         let temporary = FileManager.default.temporaryDirectory.resolvedFileURL
-        guard folder.lastPathComponent.hasPrefix("marc-clip-"),
+        guard folder.lastPathComponent.hasPrefix("marcdown-clip-"),
               folder.deletingLastPathComponent().path == temporary.path
         else { return }
         defer { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) }
@@ -54,7 +54,7 @@ enum WebClip {
             let document = try controller.makeDocument(for: nil, withContentsOf: file, ofType: UTType.markdown.identifier)
             document.displayName = file.deletingPathExtension().lastPathComponent
             controller.addDocument(document)
-            document.showWindows()   // MarcFile: adds it to OpenFiles and selects it
+            document.showWindows()   // MarcdownFile: adds it to OpenFiles and selects it
         } catch {
             NSApp.presentError(error)
         }
@@ -78,7 +78,7 @@ enum WebClip {
 
     /// `<name>.md` in a new temporary folder, which `open(_:)` deletes after reading.
     private static func writeTemporary(_ markdown: String, name: String) throws -> URL {
-        let folder = FileManager.default.temporaryDirectory.appending(path: "marc-clip-\(UUID().uuidString)")
+        let folder = FileManager.default.temporaryDirectory.appending(path: "marcdown-clip-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let file = folder.appending(path: "\(name).md")
         try Data(markdown.utf8).write(to: file)

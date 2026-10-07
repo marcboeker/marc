@@ -65,7 +65,7 @@ extension NativeTextViewCoordinator {
         previousBacktickCount = MarkdownDetection.tripleBacktickCount(in: nsDisplay)
         let fullRange = NSRange(location: 0, length: nsDisplay.length)
 
-        // Marc: from `makeBaseAttributes` (shared with raw source highlighting); upstream built them inline.
+        // Marcdown: from `makeBaseAttributes` (shared with raw source highlighting); upstream built them inline.
         let baseAttrs = makeBaseAttributes()
         // ── Root cause & fix (2026-07) ────────────────────────────────────────
         // CPU+page-fault instrumentation proved the first per-process open of a large
@@ -80,7 +80,7 @@ extension NativeTextViewCoordinator {
         // Kept for the end-of-rebuild selection replay (see below); raw mode leaves it nil.
         var parsedForReplay: ParsedDocument?
         if rawMode {
-            // Marc: the source stays verbatim at one font size, with light highlighting.
+            // Marcdown: the source stays verbatim at one font size, with light highlighting.
             let parsed = parsedDocument(for: displayText)
             SourceHighlighter.apply(to: built, text: nsDisplay, scope: fullRange,
                                     tokens: parsed.tokens, blocks: parsed.blocks,
@@ -162,7 +162,7 @@ extension NativeTextViewCoordinator {
         textView.textStorage?.endEditing()
 
 
-        textView.typingAttributes = baseAttrs // Marc: same values as upstream's makeBaseTypingAttributes call
+        textView.typingAttributes = baseAttrs // Marcdown: same values as upstream's makeBaseTypingAttributes call
 
         if let tlm = textView.textLayoutManager {
             if invalidateLayout {
@@ -198,7 +198,7 @@ extension NativeTextViewCoordinator {
         }
     }
 
-    /// Marc: raw source mode after an edit. Highlights the edited lines and the lines next to them,
+    /// Marcdown: raw source mode after an edit. Highlights the edited lines and the lines next to them,
     /// whole code blocks that touch them, or the whole document when a ``` fence came or went.
     func highlightRawSource(_ textView: NSTextView, text: String, editedRange: NSRange?, trusted: Bool) {
         guard let storage = textView.textStorage else { return }
@@ -238,7 +238,7 @@ extension NativeTextViewCoordinator {
         storage.endEditing()
     }
 
-    // Marc: new (BaseAttributesKey, makeBaseAttributes).
+    // Marcdown: new (BaseAttributesKey, makeBaseAttributes).
     /// Everything `makeBaseAttributes` reads. A key compare instead of setter
     /// invalidation: `updateNSView` writes `configuration` fields on every pass,
     /// so a didSet would drop the memo far more often than the inputs change.

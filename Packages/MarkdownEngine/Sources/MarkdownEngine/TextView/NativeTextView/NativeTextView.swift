@@ -48,7 +48,7 @@ final class NativeTextView: NSTextView {
 
     // MARK: Editor wiring
     var onPasteImage: ((NSPasteboard) -> String?)?
-    // Marc: embedder hooks (see NativeTextViewWrapper).
+    // Marcdown: embedder hooks (see NativeTextViewWrapper).
     var onWillPaste: ((NSTextView, NSPasteboard) -> Bool)?
     var onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)?
     var onSaveRequest: ((NSTextView) -> Bool)?

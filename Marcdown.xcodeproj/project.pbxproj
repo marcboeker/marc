@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4DEC5F13086652A1A2307288 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = F12A7E998B9141082039ACA8 /* Markdown */; };
-		70ECE8F2BB8FE27D580D6643 /* marc in Resources */ = {isa = PBXBuildFile; fileRef = E0E23890D29C647CD223A4E8 /* marc */; };
+		70ECE8F2BB8FE27D580D6643 /* marcdown in Resources */ = {isa = PBXBuildFile; fileRef = E0E23890D29C647CD223A4E8 /* marcdown */; };
 		9772E1E398D426BAF8FB9227 /* Demark in Frameworks */ = {isa = PBXBuildFile; productRef = 88B79ABD83571748313F181C /* Demark */; };
 		9CC80CCB79C0313594AFAF69 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 44E3E0436337CE260FF29558 /* Markdown */; };
 		E04B915BF33E15869A68FF5D /* MarkdownEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 95766DFBB283DB7392F96AD1 /* MarkdownEngine */; };
@@ -22,15 +22,15 @@
 			containerPortal = E97EFBEBCEA4D355159DF998 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = C1C7F8FAB8BF12B156A48989;
-			remoteInfo = Marc;
+			remoteInfo = Marcdown;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		0A590A929DE8418B3F8E5B17 /* MarkdownEngine */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MarkdownEngine; path = Packages/MarkdownEngine; sourceTree = SOURCE_ROOT; };
-		401A4B954A55B3C48A07B457 /* Marc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marc.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		75526E690A0D2E6222776F37 /* MarcTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarcTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E0E23890D29C647CD223A4E8 /* marc */ = {isa = PBXFileReference; path = marc; sourceTree = "<group>"; };
+		401A4B954A55B3C48A07B457 /* Marcdown.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marcdown.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		75526E690A0D2E6222776F37 /* MarcdownTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarcdownTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0E23890D29C647CD223A4E8 /* marcdown */ = {isa = PBXFileReference; path = marcdown; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -81,7 +81,7 @@
 		0EFCA26ABE02EB17DA8E399C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E0E23890D29C647CD223A4E8 /* marc */,
+				E0E23890D29C647CD223A4E8 /* marcdown */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -108,8 +108,8 @@
 		FB77617BE14FE7F0BDFB7399 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				401A4B954A55B3C48A07B457 /* Marc.app */,
-				75526E690A0D2E6222776F37 /* MarcTests.xctest */,
+				401A4B954A55B3C48A07B457 /* Marcdown.app */,
+				75526E690A0D2E6222776F37 /* MarcdownTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -117,9 +117,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C1C7F8FAB8BF12B156A48989 /* Marc */ = {
+		C1C7F8FAB8BF12B156A48989 /* Marcdown */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marc" */;
+			buildConfigurationList = 79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marcdown" */;
 			buildPhases = (
 				490ED6607584A26FF8AA19B7 /* Sources */,
 				F3C2C55596E95F5405EFAD4F /* Resources */,
@@ -132,7 +132,7 @@
 			fileSystemSynchronizedGroups = (
 				62622AE7F581F516A5CF7B59 /* App */,
 			);
-			name = Marc;
+			name = Marcdown;
 			packageProductDependencies = (
 				95766DFBB283DB7392F96AD1 /* MarkdownEngine */,
 				F12A7E998B9141082039ACA8 /* Markdown */,
@@ -140,13 +140,13 @@
 				A1C0000000000000000000B1 /* cmark-gfm */,
 				A1C0000000000000000000B2 /* cmark-gfm-extensions */,
 			);
-			productName = Marc;
-			productReference = 401A4B954A55B3C48A07B457 /* Marc.app */;
+			productName = Marcdown;
+			productReference = 401A4B954A55B3C48A07B457 /* Marcdown.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F0363BA1AF154D3D2FE3F82B /* MarcTests */ = {
+		F0363BA1AF154D3D2FE3F82B /* MarcdownTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcTests" */;
+			buildConfigurationList = 893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcdownTests" */;
 			buildPhases = (
 				D5E53F529866A5877715BA05 /* Sources */,
 				034E066684C1C43BD2343E29 /* Resources */,
@@ -160,12 +160,12 @@
 			fileSystemSynchronizedGroups = (
 				745F7DFC22FA0E37BB27B958 /* Tests */,
 			);
-			name = MarcTests;
+			name = MarcdownTests;
 			packageProductDependencies = (
 				44E3E0436337CE260FF29558 /* Markdown */,
 			);
-			productName = MarcTests;
-			productReference = 75526E690A0D2E6222776F37 /* MarcTests.xctest */;
+			productName = MarcdownTests;
+			productReference = 75526E690A0D2E6222776F37 /* MarcdownTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -185,7 +185,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marc" */;
+			buildConfigurationList = CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marcdown" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -205,8 +205,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C1C7F8FAB8BF12B156A48989 /* Marc */,
-				F0363BA1AF154D3D2FE3F82B /* MarcTests */,
+				C1C7F8FAB8BF12B156A48989 /* Marcdown */,
+				F0363BA1AF154D3D2FE3F82B /* MarcdownTests */,
 			);
 		};
 /* End PBXProject section */
@@ -223,7 +223,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				70ECE8F2BB8FE27D580D6643 /* marc in Resources */,
+				70ECE8F2BB8FE27D580D6643 /* marcdown in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,7 +249,7 @@
 /* Begin PBXTargetDependency section */
 		734B455B490AC9D4C986AD47 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = C1C7F8FAB8BF12B156A48989 /* Marc */;
+			target = C1C7F8FAB8BF12B156A48989 /* Marcdown */;
 			targetProxy = D278347931015C12C90F4EF3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -267,8 +267,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = dev;
-				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marc;
-				PRODUCT_NAME = Marc;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcdown;
+				PRODUCT_NAME = Marcdown;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -284,9 +284,9 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcTests;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcdownTests;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marcdown.app/Contents/MacOS/Marcdown";
 			};
 			name = Release;
 		};
@@ -301,9 +301,9 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcTests;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcdownTests;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marc.app/Contents/MacOS/Marc";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marcdown.app/Contents/MacOS/Marcdown";
 			};
 			name = Debug;
 		};
@@ -446,8 +446,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = dev;
-				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marc;
-				PRODUCT_NAME = Marc;
+				PRODUCT_BUNDLE_IDENTIFIER = one.m8n.marcdown;
+				PRODUCT_NAME = Marcdown;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -455,7 +455,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marc" */ = {
+		79F00FDDE470071958E40B93 /* Build configuration list for PBXNativeTarget "Marcdown" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A04C054E391D9B8DBC5F1B8B /* Debug */,
@@ -464,7 +464,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcTests" */ = {
+		893CE537093B05B7BB8A4463 /* Build configuration list for PBXNativeTarget "MarcdownTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4F8820DE2BCF6932CE6EB9CD /* Debug */,
@@ -473,7 +473,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marc" */ = {
+		CF0F8B5D395254DBA64E857A /* Build configuration list for PBXProject "Marcdown" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9E3EEF1D81DFAC9698A478E4 /* Debug */,

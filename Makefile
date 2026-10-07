@@ -1,4 +1,4 @@
-# Marc — build, run, install.
+# Marcdown — build, run, install.
 # Parallel agents can use private build output: make test DERIVED=.build/dd-lint
 DERIVED ?= .build/DerivedData
 PREFIX  ?= $(HOME)/.local
@@ -11,10 +11,10 @@ VERSION ?= $(shell git describe --tags --exact-match --match 'v[0-9]*' 2>/dev/nu
 	|| echo dev)
 
 ARCH := $(shell uname -m)
-XCODEBUILD_BASE = xcodebuild -project Marc.xcodeproj -scheme Marc -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)'
+XCODEBUILD_BASE = xcodebuild -project Marcdown.xcodeproj -scheme Marcdown -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)'
 XCODEBUILD = $(XCODEBUILD_BASE) -quiet MARKETING_VERSION=$(VERSION)
-DEBUG_APP   = $(DERIVED)/Build/Products/Debug/Marc.app
-RELEASE_APP = $(DERIVED)/Build/Products/Release/Marc.app
+DEBUG_APP   = $(DERIVED)/Build/Products/Debug/Marcdown.app
+RELEASE_APP = $(DERIVED)/Build/Products/Release/Marcdown.app
 
 SHELL := /bin/bash
 .PHONY: build bundle _bundle run install test clean quit
@@ -30,22 +30,22 @@ _bundle:
 	$(XCODEBUILD) -configuration Release build
 	rm -rf build/$(ARCH)
 	mkdir -p build/$(ARCH)
-	cp -R $(RELEASE_APP) build/$(ARCH)/Marc.app
+	cp -R $(RELEASE_APP) build/$(ARCH)/Marcdown.app
 
 quit:
-	@osascript -e 'if application "Marc" is running then tell application "Marc" to quit' >/dev/null 2>&1 || true
-	@for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -x Marc >/dev/null || exit 0; sleep 0.5; done; pkill -x Marc || true
+	@osascript -e 'if application "Marcdown" is running then tell application "Marcdown" to quit' >/dev/null 2>&1 || true
+	@for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -x Marcdown >/dev/null || exit 0; sleep 0.5; done; pkill -x Marcdown || true
 
 run: quit build
 	open $(DEBUG_APP)
 
 install: quit
 	$(XCODEBUILD) -configuration Release build
-	rm -rf $(APPDIR)/Marc.app
+	rm -rf $(APPDIR)/Marcdown.app
 	mkdir -p $(APPDIR) $(PREFIX)/bin
-	cp -R $(RELEASE_APP) $(APPDIR)/Marc.app
-	ln -sf $(APPDIR)/Marc.app/Contents/Resources/marc $(PREFIX)/bin/marc
-	@echo "Installed $(APPDIR)/Marc.app and $(PREFIX)/bin/marc"
+	cp -R $(RELEASE_APP) $(APPDIR)/Marcdown.app
+	ln -sf $(APPDIR)/Marcdown.app/Contents/Resources/marcdown $(PREFIX)/bin/marcdown
+	@echo "Installed $(APPDIR)/Marcdown.app and $(PREFIX)/bin/marcdown"
 
 # Full xcodebuild output is huge; keep results, failures and errors.
 test:

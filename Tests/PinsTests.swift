@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 /// The pin list, its persistence, and the sidebar order. Files are temporary; the defaults are an own suite.
 @MainActor
@@ -20,8 +20,8 @@ struct PinsTests {
         return url
     }
 
-    private func open(_ url: URL) -> MarcFile {
-        let file = MarcFile()
+    private func open(_ url: URL) -> MarcdownFile {
+        let file = MarcdownFile()
         file.fileURL = url
         return file
     }
@@ -76,7 +76,7 @@ struct PinsTests {
         #expect(pins.isPinned(file.url))
         store.togglePin(file)
         #expect(!pins.isPinned(file.url))
-        store.togglePin(MarcFile())
+        store.togglePin(MarcdownFile())
         #expect(pins.items.isEmpty)
     }
 

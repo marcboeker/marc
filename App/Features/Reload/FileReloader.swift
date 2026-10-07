@@ -1,18 +1,18 @@
 import AppKit
 
-/// Reloads a file when another process changes it. One per open file; `MarcFile.presentedItemDidChange` calls it.
+/// Reloads a file when another process changes it. One per open file; `MarcdownFile.presentedItemDidChange` calls it.
 /// Shown in the editor: a clean buffer is replaced quietly (undo history cleared, cursor kept); a buffer with
 /// unsaved edits asks first: merge, keep the edits, or reload.
 /// Not shown: a clean file takes the disk text quietly; a file with unsaved edits gets `needsDiskReview`,
 /// and the question comes when it is shown (`EditorController.fileShown`).
 @MainActor
 final class FileReloader {
-    private unowned let file: MarcFile
+    private unowned let file: MarcdownFile
     private var isAsking = false
     /// The newest disk version while the question shows. The answer applies to it, not to the one first asked about.
     private var pending: Disk?
 
-    init(file: MarcFile) {
+    init(file: MarcdownFile) {
         self.file = file
     }
 

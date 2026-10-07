@@ -3,7 +3,7 @@ import SwiftUI
 /// Sidebar section with the shown file's headings. Click a heading to jump to it.
 struct OutlineSection: View {
     let controller: EditorController
-    let file: MarcFile
+    let file: MarcdownFile
 
     var body: some View {
         Section("Outline") {

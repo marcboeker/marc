@@ -7,7 +7,7 @@ struct PaletteItem: Identifiable {
         /// By value: SwiftUI replaces its menu items when state changes, so the item is looked up again to run.
         case menu(MenuPath)
         /// An open file that is not pinned.
-        case file(MarcFile)
+        case file(MarcdownFile)
         /// A pinned file, open or closed.
         case pin(Pin)
     }
@@ -80,7 +80,7 @@ extension PaletteItem {
 
     /// The file's path; an untitled file has only its id, which does not outlive the file.
     @MainActor
-    static func key(for file: MarcFile) -> String {
+    static func key(for file: MarcdownFile) -> String {
         file.url.map { key(for: $0) } ?? "untitled:\(file.id.uuidString)"
     }
 }

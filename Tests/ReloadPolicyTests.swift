@@ -1,5 +1,5 @@
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct ReloadPolicyTests {
     @Test func cleanBufferReloads() {

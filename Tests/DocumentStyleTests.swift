@@ -1,7 +1,7 @@
 import AppKit
 import Testing
 @testable import MarkdownEngine
-@testable import Marc
+@testable import Marcdown
 
 /// The editor and the pages take their measures from one DocumentStyle: these check that both
 /// sides end at the same numbers.

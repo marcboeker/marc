@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct WebClipMarkdownTests {
     private func name(_ markdown: String, _ url: String = "https://example.com/blog/post.html") -> String {

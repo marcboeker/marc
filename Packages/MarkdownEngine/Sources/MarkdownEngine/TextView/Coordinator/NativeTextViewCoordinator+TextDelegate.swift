@@ -86,7 +86,7 @@ extension NativeTextViewCoordinator {
         // Before the early returns: the first keystroke must hide the placeholder.
         (tv as? NativeTextView)?.refreshPlaceholderVisibility()
         // Raw mode: display IS storage — sync the binding, re-highlight the edited lines.
-        // Marc: upstream only pushed the text. The highlight needs the edit descriptor, so read it
+        // Marcdown: upstream only pushed the text. The highlight needs the edit descriptor, so read it
         // before the reset.
         if configuration.rawSourceMode {
             let editedRange = pendingEditedRange ?? tv.textStorage?.editedRange
@@ -198,7 +198,7 @@ extension NativeTextViewCoordinator {
             }
 #endif
             if storageState.storage != self.lastSyncedText {
-                // Marc: through `scheduleTextPush` (per-document binding).
+                // Marcdown: through `scheduleTextPush` (per-document binding).
                 scheduleTextPush(storageState.storage)
             }
         }
@@ -358,7 +358,7 @@ extension NativeTextViewCoordinator {
             }
         }
 
-        // Marc: a line break added or removed can turn lines away from the edit into indented
+        // Marcdown: a line break added or removed can turn lines away from the edit into indented
         // code or a setext heading, or back. Restyle the whole blocks the caret lines belong
         // to (paragraphs only up to a size), and an indented code block right after them.
         if listStructureChanged {
@@ -791,7 +791,7 @@ extension NativeTextViewCoordinator {
         return prefix(in: before) != prefix(in: after as String)
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// The blocks a line-break edit can restyle away from the edit (see textDidChange).
     static func structureBlockRanges(_ blocks: [Block], around lines: [NSRange]) -> [NSRange] {
         let lines = lines.filter { $0.location != NSNotFound }
@@ -821,7 +821,7 @@ extension NativeTextViewCoordinator {
     /// the contribution of runs it touches. `previousBacktickCount` minus the
     /// pre-edit window count (captured in shouldChangeTextIn) plus the
     /// post-edit window count is exact. Any doubt → full scan.
-    // Marc: internal (upstream private), for `highlightRawSource`.
+    // Marcdown: internal (upstream private), for `highlightRawSource`.
     func incrementalBacktickCensus(fullText: NSString, editedRange: NSRange,
                                            lengthDelta: Int, trusted: Bool) -> Int {
         defer { pendingBacktickWindow = nil }

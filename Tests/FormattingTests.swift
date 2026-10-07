@@ -1,5 +1,5 @@
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct FormattingTests {
     private func f(_ s: String) -> String { MarkdownFormatting.format(s) }

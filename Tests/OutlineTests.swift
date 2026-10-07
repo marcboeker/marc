@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct OutlineTests {
     private func substring(_ text: String, _ item: OutlineItem) -> String {

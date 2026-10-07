@@ -67,7 +67,7 @@ extension NativeTextViewCoordinator {
         }
         // Don't pre-set `lastSyncedText` — leaving it stale lets updateNSView do its
         // normal rebuild (restyle + re-measure) so the accepted WT result stays visible.
-        // Marc: the binding of this document, even if the embedder switches documents before the push.
+        // Marcdown: the binding of this document, even if the embedder switches documents before the push.
         let binding = $text
         DispatchQueue.main.async {
             binding.wrappedValue = storage

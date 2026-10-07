@@ -112,7 +112,7 @@ enum BlockLevelTokenizer {
         return [MarkdownToken(kind: .heading, range: tokenRange, contentRange: content, markerRanges: markers)]
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// Setext heading: text lines, then the `===`/`---` underline as the marker.
     private static func setextHeading(in s: NSString) -> [MarkdownToken] {
         var lineStart = 0
@@ -166,7 +166,7 @@ enum BlockLevelTokenizer {
 
     // MARK: - Fenced code  (legacy ```lang\n…\n```)
 
-    // Marc: ``` and ~~~ fences, closed by the CommonMark rule (BlockParser.isFenceClose).
+    // Marcdown: ``` and ~~~ fences, closed by the CommonMark rule (BlockParser.isFenceClose).
     private static func codeBlock(in s: NSString) -> [MarkdownToken] {
         let len = s.length
         let (openEnd, afterOpenLine) = line(in: s, from: 0)
@@ -194,7 +194,7 @@ enum BlockLevelTokenizer {
                            NSRange(location: closingStart, length: closingEnd - closingStart)])]
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// Indented code: the whole block is content, there are no fence markers.
     private static func indentedCode(in s: NSString) -> [MarkdownToken] {
         var end = s.length
@@ -251,7 +251,7 @@ enum BlockLevelTokenizer {
     }
 
     /// `^[ \t]*\|[- \t:|]+\|[ \t]*$` — outer pipes, inner only `- : | space tab`.
-    // Marc: internal (upstream private), for SourceHighlighter.
+    // Marcdown: internal (upstream private), for SourceHighlighter.
     static func isTableSeparator(_ s: NSString, _ start: Int, _ end: Int) -> Bool {
         var i = start
         while i < end, isWS(s.character(at: i)) { i += 1 }

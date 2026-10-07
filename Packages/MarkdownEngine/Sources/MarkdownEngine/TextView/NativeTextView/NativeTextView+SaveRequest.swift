@@ -1,4 +1,4 @@
-//  Marc: lets the embedder run code before an explicit save (⌘S / File > Save).
+//  Marcdown: lets the embedder run code before an explicit save (⌘S / File > Save).
 //  Autosave never sends `save:`, so it does not pass through here.
 
 import AppKit

@@ -12,7 +12,7 @@ final class EditorController {
     @ObservationIgnored private(set) weak var textView: NSTextView?
 
     /// The file the editor shows. Nil in the empty window. Set by ContentView when the selection changes.
-    @ObservationIgnored weak var file: MarcFile?
+    @ObservationIgnored weak var file: MarcdownFile?
 
     /// The document's file. Nil for an unsaved document; changes after Save As.
     var fileURL: URL? { file?.url }
@@ -26,7 +26,7 @@ final class EditorController {
     private(set) var previewMode = PreviewMode.editor
 
     /// The preview replaces the editor: the text view is out of sight and takes no user input (no keys,
-    /// clicks, drops, Format or Find). It stays editable, so Marc's own edits still go in.
+    /// clicks, drops, Format or Find). It stays editable, so Marcdown's own edits still go in.
     var editorIsHidden: Bool { previewMode == .overlay }
 
     /// Exact text of the editor (the text view's string), or the file text before it exists.
@@ -77,7 +77,7 @@ final class EditorController {
 
     /// The editor shows `file` now (the engine has put in its text, scroll position and selection):
     /// show its lint marks, and catch outside changes made while it was not shown.
-    func fileShown(_ file: MarcFile) {
+    func fileShown(_ file: MarcdownFile) {
         guard self.file === file else { return }
         lint.show(file)
         preview.fileShown()

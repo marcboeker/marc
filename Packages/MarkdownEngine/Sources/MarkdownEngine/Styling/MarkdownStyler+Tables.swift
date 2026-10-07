@@ -61,7 +61,7 @@ extension MarkdownStyler {
 
     private static func themeKeyPrefix(ctx: StylingContext, appearance: NSAppearance) -> String {
         let theme = ctx.configuration.theme
-        // Marc: the inline code and table theme colors replace `codeBackgroundColor` here and in `prefix`.
+        // Marcdown: the inline code and table theme colors replace `codeBackgroundColor` here and in `prefix`.
         let identity = "\(ctx.baseFont.fontName)|\(ctx.baseFont.pointSize)|\(appearance.name.rawValue)|"
             + "\(ObjectIdentifier(theme.bodyText))|\(ObjectIdentifier(theme.mutedText))|"
             + "\(ObjectIdentifier(theme.highlightColor))|\(ObjectIdentifier(theme.inlineCodeBackground))|"
@@ -396,7 +396,7 @@ extension MarkdownStyler {
         latex: any LatexRenderer,
         extensions: [any MarkdownExtension] = []
     ) -> NSAttributedString {
-        // Marc: tabular digits, so numbers in a column line up.
+        // Marcdown: tabular digits, so numbers in a column line up.
         let descriptor = baseFont.fontDescriptor.addingAttributes([.featureSettings: [[
             NSFontDescriptor.FeatureKey.typeIdentifier: kNumberSpacingType,
             NSFontDescriptor.FeatureKey.selectorIdentifier: kMonospacedNumbersSelector,
@@ -488,7 +488,7 @@ extension MarkdownStyler {
                     out.addAttributes(attributes, range: span)
                 }
             case .code(_, let content):
-                // Marc: rasterized text has no pill drawing: the glyph-box fill stands in.
+                // Marcdown: rasterized text has no pill drawing: the glyph-box fill stands in.
                 out.append(NSAttributedString(string: ns.substring(with: content), attributes: [
                     .font: codeFont, .backgroundColor: theme.inlineCodeBackground,
                     .foregroundColor: theme.inlineCodeText ?? theme.bodyText
@@ -508,7 +508,7 @@ extension MarkdownStyler {
                 } else {
                     appendPlain(range, font)   // renderer unavailable → keep raw `$…$`
                 }
-            // Marc: a link draws its text in link ink (the cell is an image, so it is not
+            // Marcdown: a link draws its text in link ink (the cell is an image, so it is not
             // clickable), an image its alt text; upstream drew both raw.
             case .link(_, let textRange, _, _, let children):
                 let start = out.length
@@ -531,7 +531,7 @@ extension MarkdownStyler {
 
     // MARK: - Rendering
 
-    // Marc: `codeBackgroundColor` parameter removed here, in formattedCellString and in appendInlineCell.
+    // Marcdown: `codeBackgroundColor` parameter removed here, in formattedCellString and in appendInlineCell.
     private static func renderTable(
         _ table: ParsedTable,
         baseFont: NSFont,
@@ -545,7 +545,7 @@ extension MarkdownStyler {
         let cellHPadding: CGFloat = 12
         let cellVPadding: CGFloat = 6
         let borderWidth: CGFloat = 1
-        // Marc: colors from the theme (upstream mutedText at 0.5 / 0.08 alpha).
+        // Marcdown: colors from the theme (upstream mutedText at 0.5 / 0.08 alpha).
         // Resolve under the real appearance: the image draws later, under whatever appearance is current then.
         func resolved(_ color: NSColor) -> NSColor {
             var out = color
@@ -556,7 +556,7 @@ extension MarkdownStyler {
         }
         let borderColor = resolved(theme.tableBorder)
         let headerRule = resolved(theme.tableHeaderRule ?? theme.tableBorder)
-        // Marc: no card. The first column's text starts on the text edge and the last one's
+        // Marcdown: no card. The first column's text starts on the text edge and the last one's
         // ends on the table's right edge; rows are separated by rules, not by an outline.
         func padLeft(_ col: Int) -> CGFloat { col == 0 ? 0 : cellHPadding }
         func padRight(_ col: Int) -> CGFloat { col == columnCount - 1 ? 0 : cellHPadding }
@@ -679,7 +679,7 @@ extension MarkdownStyler {
 
         let totalWidth = columnWidths.reduce(0, +) + chrome
         let totalHeight = rowContentHeights.reduce(0) { $0 + $1 + 2 * cellVPadding }
-            + CGFloat(rowCount) * borderWidth   // Marc: one rule below each row, none above the first
+            + CGFloat(rowCount) * borderWidth   // Marcdown: one rule below each row, none above the first
 
         let size = NSSize(width: totalWidth, height: totalHeight)
 
@@ -697,7 +697,7 @@ extension MarkdownStyler {
 
         // Flipped image so AppKit handles the y-flip; a manual transform mirror would flip glyphs too.
         return NSImage(size: size, flipped: true) { _ in
-            // Marc: upstream drew a square outer border and column/row separator lines.
+            // Marcdown: upstream drew a square outer border and column/row separator lines.
             // Rules only: a stronger one under the header, hairlines under every body row.
             for row in 1...rowCount {
                 (row == 1 ? headerRule : borderColor).setFill()

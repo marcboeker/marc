@@ -2,18 +2,18 @@ import Foundation
 
 /// What a sidebar row selects. A pinned row selects its pin, also when the file is open.
 enum SidebarItem: Hashable {
-    case file(MarcFile.ID)
+    case file(MarcdownFile.ID)
     case pin(Pin.ID)
 }
 
 /// One sidebar row: an open file (with its pin when it is pinned), or a pin whose file is closed.
 enum SidebarRow: Identifiable {
-    case file(MarcFile, pin: Pin?)
+    case file(MarcdownFile, pin: Pin?)
     case closedPin(Pin)
 
     var id: SidebarItem { selection }
 
-    var file: MarcFile? {
+    var file: MarcdownFile? {
         switch self {
         case .file(let file, _): file
         case .closedPin: nil

@@ -1,10 +1,10 @@
-//  Marc: file URL drops. NSTextView (rich text) would embed a file attachment;
+//  Marcdown: file URL drops. NSTextView (rich text) would embed a file attachment;
 //  instead the embedder's `onDropFiles` decides what text to insert.
 
 import AppKit
 
 extension NativeTextView {
-    // Marc: add `.fileURL` to whatever NSTextView already accepts.
+    // Marcdown: add `.fileURL` to whatever NSTextView already accepts.
     override var acceptableDragTypes: [NSPasteboard.PasteboardType] {
         var types = super.acceptableDragTypes
         if onDropFiles != nil, !types.contains(.fileURL) { types.append(.fileURL) }

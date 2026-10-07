@@ -2,11 +2,11 @@ import Foundation
 import UniformTypeIdentifiers
 import WebKit
 
-/// The preview's own URL scheme. The page comes from `marc-preview://page/`, files from
-/// `marc-preview://file/<absolute path>`. The web view gets no file read access at all: Marc reads
+/// The preview's own URL scheme. The page comes from `marcdown-preview://page/`, files from
+/// `marcdown-preview://file/<absolute path>`. The web view gets no file read access at all: Marcdown reads
 /// the files and gives out only those in the document folder and its subfolders.
 enum PreviewScheme {
-    static let name = "marc-preview"
+    static let name = "marcdown-preview"
     static let pageURL = URL(string: "\(name)://page/")!
 
     /// `<base href>` for the document folder: relative images and links resolve inside the scheme.
@@ -16,7 +16,7 @@ enum PreviewScheme {
         return "\(name)://file\(path.hasSuffix("/") ? path : path + "/")"
     }
 
-    /// The file a `marc-preview://file/…` URL stands for, without query and fragment. Nil for other URLs.
+    /// The file a `marcdown-preview://file/…` URL stands for, without query and fragment. Nil for other URLs.
     static func fileURL(_ url: URL) -> URL? {
         guard url.scheme == name, url.host() == "file" else { return nil }
         let path = url.path(percentEncoded: false)
@@ -49,7 +49,7 @@ enum PreviewScheme {
     }
 }
 
-/// Answers the web view's `marc-preview:` loads: the page, and files in the document folder.
+/// Answers the web view's `marcdown-preview:` loads: the page, and files in the document folder.
 @MainActor
 final class PreviewSchemeHandler: NSObject, WKURLSchemeHandler {
     /// HTML of the page; set before each page load.

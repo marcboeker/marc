@@ -219,7 +219,7 @@ public enum MarkdownHTMLRenderer {
     }
 
     /// Fenced code: drop the opening ```lang / closing ``` fence lines, escape body.
-    /// Marc: also ~~~ fences, and indented code (no fences; the 4-column indent goes).
+    /// Marcdown: also ~~~ fences, and indented code (no fences; the 4-column indent goes).
     private static func renderCodeBlock(range: NSRange, ns: NSString) -> String {
         let raw = ns.substring(with: range)
         var lines = raw.components(separatedBy: "\n")

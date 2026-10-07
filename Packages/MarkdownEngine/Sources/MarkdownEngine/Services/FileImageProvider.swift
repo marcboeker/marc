@@ -1,4 +1,4 @@
-//  Marc: resolves `![alt](path)` image destinations to files. Relative paths
+//  Marcdown: resolves `![alt](path)` image destinations to files. Relative paths
 //  resolve against `baseURL` (the folder of the .md file). Assign it with
 //  `configuration.services.images = FileImageProvider(baseURL: folder)`.
 

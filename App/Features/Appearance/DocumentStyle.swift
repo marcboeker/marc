@@ -1,7 +1,7 @@
 import AppKit
 import MarkdownEngine
 
-/// Marc's look for a Markdown document, shared by the editor, the Preview and Print. The colors
+/// Marcdown's look for a Markdown document, shared by the editor, the Preview and Print. The colors
 /// are one palette, and the measures are computed once from the font, so the editor's paragraph
 /// styles and the pages' CSS put text, gaps and blocks at the same places.
 struct DocumentStyle: Equatable {
@@ -75,7 +75,7 @@ struct DocumentStyle: Equatable {
 extension DocumentStyle {
     /// Sets the editor's measures and colors. The text inset (and so the column) is the caller's.
     func apply(to config: inout MarkdownEditorConfiguration) {
-        config.theme = .marc
+        config.theme = .marcdown
         let extra = lineHeight - naturalLineHeight
         config.paragraph.lineHeightExtraSpacing = extra
         config.lists.extraLineHeight = extra
@@ -106,8 +106,8 @@ extension DocumentStyle {
 }
 
 extension MarkdownEditorTheme {
-    /// Marc's look: the DocumentStyle palette.
-    static let marc = MarkdownEditorTheme(
+    /// Marcdown's look: the DocumentStyle palette.
+    static let marcdown = MarkdownEditorTheme(
         bodyText: DocumentPalette.text.color,
         mutedText: DocumentPalette.secondary.color,
         disabledText: DocumentPalette.tertiary.color,

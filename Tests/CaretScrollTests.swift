@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import Testing
 import MarkdownEngine
-@testable import Marc
+@testable import Marcdown
 
 /// Arrow keys must scroll the caret into view.
 @MainActor

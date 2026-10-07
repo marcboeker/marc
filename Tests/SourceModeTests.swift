@@ -1,16 +1,16 @@
 import AppKit
 import Testing
 import MarkdownEngine
-@testable import Marc
+@testable import Marcdown
 
-/// View > Show Markdown Source: the engine's raw mode with Marc's light highlighting.
+/// View > Show Markdown Source: the engine's raw mode with Marcdown's light highlighting.
 @MainActor
 struct SourceModeTests {
     private static let text = "# Title\n\nSome **bold** and `code`.\n\n- item\n"
 
     private func sourceEditor(_ text: String = Self.text) async throws -> (textView: NSTextView, window: NSWindow) {
         var config = MarkdownEditorConfiguration()
-        config.theme = .marc
+        config.theme = .marcdown
         config.rawSourceMode = true
         return try #require(await makeTestEditor(text: text, configuration: config))
     }
@@ -42,14 +42,14 @@ struct SourceModeTests {
         let (textView, window) = try await sourceEditor()
         defer { withExtendedLifetime(window) {} }
         let text = Self.text as NSString
-        let muted = MarkdownEditorTheme.marc.mutedText
+        let muted = MarkdownEditorTheme.marcdown.mutedText
         #expect(color(textView, at: 0) == muted)                                        // #
         #expect(isBold(font(textView, at: text.range(of: "Title").location)))
         #expect(color(textView, at: text.range(of: "**").location) == muted)
         #expect(isBold(font(textView, at: text.range(of: "bold").location)))
         #expect(!isBold(font(textView, at: text.range(of: "Some").location)))
         #expect(color(textView, at: text.range(of: "`").location) == muted)
-        #expect(color(textView, at: text.range(of: "code").location) == MarkdownEditorTheme.marc.inlineCodeText)
+        #expect(color(textView, at: text.range(of: "code").location) == MarkdownEditorTheme.marcdown.inlineCodeText)
         #expect(color(textView, at: text.range(of: "- ").location) == muted)
     }
 
@@ -60,7 +60,7 @@ struct SourceModeTests {
         textView.setSelectedRange(NSRange(location: end, length: 0))
         textView.insertText("## Next", replacementRange: textView.selectedRange())
         let location = (textView.string as NSString).range(of: "## Next").location
-        #expect(color(textView, at: location) == MarkdownEditorTheme.marc.mutedText)
+        #expect(color(textView, at: location) == MarkdownEditorTheme.marcdown.mutedText)
         #expect(isBold(font(textView, at: location + 3)))
         #expect(font(textView, at: location + 3)?.pointSize == font(textView, at: 10)?.pointSize)
     }
@@ -70,7 +70,7 @@ struct SourceModeTests {
         let (textView, window) = try await sourceEditor(source)
         defer { withExtendedLifetime(window) {} }
         let text = source as NSString
-        let muted = MarkdownEditorTheme.marc.mutedText
+        let muted = MarkdownEditorTheme.marcdown.mutedText
         #expect(color(textView, at: text.range(of: "- top").location) == muted)
         #expect(color(textView, at: text.range(of: "1.").location) == muted)
         #expect(color(textView, at: text.range(of: "- [x]").location) == muted)
@@ -86,7 +86,7 @@ struct SourceModeTests {
         let (textView, window) = try await sourceEditor(source)
         defer { withExtendedLifetime(window) {} }
         let text = source as NSString
-        let muted = MarkdownEditorTheme.marc.mutedText
+        let muted = MarkdownEditorTheme.marcdown.mutedText
         let delimiter = text.range(of: "|---|:-:|")
         for location in delimiter.location..<NSMaxRange(delimiter) {
             #expect(color(textView, at: location) == muted)
@@ -103,7 +103,7 @@ struct SourceModeTests {
         textView.setSelectedRange(NSRange(location: end, length: 0))
         textView.insertText("  - sub **b**", replacementRange: textView.selectedRange())
         let text = textView.string as NSString
-        let muted = MarkdownEditorTheme.marc.mutedText
+        let muted = MarkdownEditorTheme.marcdown.mutedText
         #expect(color(textView, at: text.range(of: "- sub").location) == muted)
         #expect(isBold(font(textView, at: text.range(of: "**b").location + 2)))
         #expect(isBold(font(textView, at: text.range(of: "bold").location)))       // earlier block kept

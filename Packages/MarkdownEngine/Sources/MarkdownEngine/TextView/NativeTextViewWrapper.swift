@@ -141,7 +141,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
     /// Return `true` to show the arrow cursor instead of the I-beam.
     public var isCursorExcluded: ((CGPoint) -> Bool)?
 
-    // Marc: embedder hooks.
+    // Marcdown: embedder hooks.
     /// Called once (asynchronously, on the main queue) after the underlying `NSTextView`
     /// exists and is in the view hierarchy. The text view lives as long as this SwiftUI view.
     public var onTextViewReady: ((NSTextView) -> Void)?
@@ -186,7 +186,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         onPersistScrollOffset: ((String, CGFloat) -> Void)? = nil,
         restoreScrollOffset: ((String) -> CGFloat?)? = nil,
         isCursorExcluded: ((CGPoint) -> Bool)? = nil,
-        // Marc: embedder hooks.
+        // Marcdown: embedder hooks.
         onTextViewReady: ((NSTextView) -> Void)? = nil,
         onWillPaste: ((NSTextView, NSPasteboard) -> Bool)? = nil,
         onDropFiles: ((NSTextView, NSDraggingInfo, Int) -> Bool)? = nil,
@@ -218,7 +218,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         self.onPersistScrollOffset = onPersistScrollOffset
         self.restoreScrollOffset = restoreScrollOffset
         self.isCursorExcluded = isCursorExcluded
-        // Marc: embedder hooks.
+        // Marcdown: embedder hooks.
         self.onTextViewReady = onTextViewReady
         self.onWillPaste = onWillPaste
         self.onDropFiles = onDropFiles
@@ -422,7 +422,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             context.coordinator.updateCodeBlockSelection(textView: textView)
         }
         reconcileHeader(textView: textView, context: context)
-        // Marc: hooks.
+        // Marcdown: hooks.
         textView.onWillPaste = onWillPaste
         textView.onDropFiles = onDropFiles
         textView.onSaveRequest = onSaveRequest
@@ -440,11 +440,11 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             return
         }
         reconcileHeader(textView: textView, context: context)
-        // Marc: refresh hooks first, before any early return below.
+        // Marcdown: refresh hooks first, before any early return below.
         textView.onWillPaste = onWillPaste
         textView.onDropFiles = onDropFiles
         textView.onSaveRequest = onSaveRequest
-        // Marc: the current binding (the embedder may give each document its own). Pushes already queued
+        // Marcdown: the current binding (the embedder may give each document its own). Pushes already queued
         // keep the binding of the document they came from.
         context.coordinator.setTextBinding($text)
 
@@ -468,7 +468,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             }
             // Evict undo stacks, content snapshots and selections for documents no
             // longer retained (keep the current one); clear actions before dropping.
-            // Marc: selections added.
+            // Marcdown: selections added.
             let staleUndoKeys = Set(context.coordinator.undoManagers.keys)
                 .union(context.coordinator.undoContentSnapshots.keys)
                 .union(context.coordinator.selections.keys)
@@ -539,7 +539,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             context.coordinator.configuration.rawSourceMode = configuration.rawSourceMode
             textView.configuration.rawSourceMode = configuration.rawSourceMode
             textView.breakUndoCoalescing()
-            // Marc: without wiki links both modes show the same text, so undo stays valid.
+            // Marcdown: without wiki links both modes show the same text, so undo stays valid.
             if MarkdownEngineFeatures.wikiLinks {
                 context.coordinator.undoManagers[documentId]?.removeAllActions()
             }
@@ -617,7 +617,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
         textView.insertionPointColor = isEditable
             ? (context.coordinator.resolvedCaretColor ?? context.coordinator.configuration.theme.bodyText)
             : .clear
-        // Marc: sync paragraph style (line height, paragraph spacing) at runtime; it only
+        // Marcdown: sync paragraph style (line height, paragraph spacing) at runtime; it only
         // reaches the text through a restyle, so it rebuilds like a font change.
         let oldParagraph = context.coordinator.configuration.paragraph
         let paragraphChanged = oldParagraph.lineHeightExtraSpacing != configuration.paragraph.lineHeightExtraSpacing
@@ -662,7 +662,7 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
             }
             // Snapshot the outgoing document's content (storage form) so a later
             // switch-back can detect a file rewritten while it was backgrounded.
-            // Marc: from the synchronous storage, not `lastSyncedText`, which lags an edit
+            // Marcdown: from the synchronous storage, not `lastSyncedText`, which lags an edit
             // whose push is still queued. Also keep the outgoing selection.
             if let outgoingId = context.coordinator.documentId {
                 context.coordinator.undoContentSnapshots[outgoingId] = context.coordinator.configuration.rawSourceMode
@@ -758,13 +758,13 @@ public struct NativeTextViewWrapper: NSViewRepresentable {
                 context.coordinator.pendingScrollRestoreDocumentId = nil
             }
         }
-        // Marc: put the incoming document's selection back (clamped: the text may have changed).
+        // Marcdown: put the incoming document's selection back (clamped: the text may have changed).
         if isNodeSwitch, let saved = context.coordinator.selections[documentId] {
             let length = (textView.string as NSString).length
             let location = min(saved.location, length)
             textView.setSelectedRange(NSRange(location: location, length: min(saved.length, length - location)))
         }
-        // Marc: `onDocumentShown`, once per document, after text, scroll and selection are in.
+        // Marcdown: `onDocumentShown`, once per document, after text, scroll and selection are in.
         if context.coordinator.shownDocumentId != documentId {
             context.coordinator.shownDocumentId = documentId
             if let onDocumentShown {

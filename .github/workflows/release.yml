@@ -27,9 +27,9 @@ jobs:
       - name: Zip app bundles
         run: |
           cd build/arm64
-          zip -ry ../Marc-macos-arm64.zip Marc.app
+          zip -ry ../Marcdown-macos-arm64.zip Marcdown.app
           cd ../x86_64
-          zip -ry ../Marc-macos-amd64.zip Marc.app
+          zip -ry ../Marcdown-macos-amd64.zip Marcdown.app
 
       - name: Generate release notes
         run: |
@@ -50,28 +50,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            build/Marc-macos-arm64.zip \
-            build/Marc-macos-amd64.zip \
+            build/Marcdown-macos-arm64.zip \
+            build/Marcdown-macos-amd64.zip \
             --title "${GITHUB_REF_NAME}" \
             --notes-file "${RUNNER_TEMP}/release-notes.md"
 
       - name: Update Homebrew cask
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          ARM_SHA256=$(shasum -a 256 build/Marc-macos-arm64.zip | awk '{print $1}')
-          AMD_SHA256=$(shasum -a 256 build/Marc-macos-amd64.zip | awk '{print $1}')
+          ARM_SHA256=$(shasum -a 256 build/Marcdown-macos-arm64.zip | awk '{print $1}')
+          AMD_SHA256=$(shasum -a 256 build/Marcdown-macos-amd64.zip | awk '{print $1}')
 
           git fetch origin main
           git checkout main
 
-          sed -i '' "s/^  version \".*\"\$/  version \"${VERSION}\"/" Casks/marc.rb
-          perl -0777 -pi -e "s/(on_arm do\n\s*sha256 )\"[^\"]*\"/\${1}\"${ARM_SHA256}\"/" Casks/marc.rb
-          perl -0777 -pi -e "s/(on_intel do\n\s*sha256 )\"[^\"]*\"/\${1}\"${AMD_SHA256}\"/" Casks/marc.rb
+          sed -i '' "s/^  version \".*\"\$/  version \"${VERSION}\"/" Casks/marcdown.rb
+          perl -0777 -pi -e "s/(on_arm do\n\s*sha256 )\"[^\"]*\"/\${1}\"${ARM_SHA256}\"/" Casks/marcdown.rb
+          perl -0777 -pi -e "s/(on_intel do\n\s*sha256 )\"[^\"]*\"/\${1}\"${AMD_SHA256}\"/" Casks/marcdown.rb
 
-          if ! git diff --quiet -- Casks/marc.rb; then
+          if ! git diff --quiet -- Casks/marcdown.rb; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add Casks/marc.rb
+            git add Casks/marcdown.rb
             git commit -m "chore: update cask to ${GITHUB_REF_NAME}"
             git push origin HEAD:main
           fi

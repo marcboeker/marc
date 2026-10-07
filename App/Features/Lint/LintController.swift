@@ -2,7 +2,7 @@ import AppKit
 import Observation
 
 /// Installed on the text view when the engine has created it. Shows the shown file's lint issues
-/// (`MarcFile.lintIssues`, kept up to date by the file) as gutter icons.
+/// (`MarcdownFile.lintIssues`, kept up to date by the file) as gutter icons.
 @MainActor
 final class LintController {
     private let gutter = LintGutter()
@@ -20,12 +20,12 @@ final class LintController {
     }
 
     /// The editor shows `file` (its text is in the text view): show its issues, and again each time they change.
-    func show(_ file: MarcFile) {
+    func show(_ file: MarcdownFile) {
         generation &+= 1
         track(file, generation: generation)
     }
 
-    private func track(_ file: MarcFile, generation: Int) {
+    private func track(_ file: MarcdownFile, generation: Int) {
         guard generation == self.generation else { return }
         let issues = withObservationTracking { file.lintIssues } onChange: { [weak self] in
             // Called before the change; read the new value a turn later.

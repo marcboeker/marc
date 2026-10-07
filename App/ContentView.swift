@@ -61,7 +61,7 @@ struct ContentView: View {
 
     /// The editor, and in a preview mode the rendered page over it or beside it. The editor stays in
     /// the view tree in every mode (hidden under the overlay), so it keeps its text view, undo and scroll.
-    private func detail(_ file: MarcFile) -> some View {
+    private func detail(_ file: MarcdownFile) -> some View {
         GeometryReader { geometry in
             let mode = controller.previewMode
             let layout = PreviewLayout(mode: mode, width: geometry.size.width, fraction: splitFraction)
@@ -116,7 +116,7 @@ struct ContentView: View {
     /// One editor for all files. Each file has its own `documentId` and text binding, so the engine
     /// keeps undo and scroll position per file, and an edit lands in the file it was made in.
     /// `width` is the editor's part of the detail area.
-    private func editor(_ file: MarcFile, width: CGFloat) -> some View {
+    private func editor(_ file: MarcdownFile, width: CGFloat) -> some View {
         NativeTextViewWrapper(
             text: Binding(get: { file.text }, set: { file.edit($0) }),
             configuration: configuration(width: width, folder: file.url?.deletingLastPathComponent()),
@@ -159,7 +159,7 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var title: String { files.selected?.title ?? "Marc" }
+    private var title: String { files.selected?.title ?? "Marcdown" }
 
     /// Point the editor controller at the selected file. The engine shows it a turn later (`fileShown`).
     private func sync() {

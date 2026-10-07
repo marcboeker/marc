@@ -2,7 +2,7 @@
 //  SourceHighlighter.swift
 //  MarkdownEngine
 //
-//  Marc: light highlighting for raw source mode. Every character stays
+//  Marcdown: light highlighting for raw source mode. Every character stays
 //  visible and every line keeps the base font size; syntax markers get the
 //  muted color, emphasis and heading text get bold/italic, links and inline
 //  code get their theme color.

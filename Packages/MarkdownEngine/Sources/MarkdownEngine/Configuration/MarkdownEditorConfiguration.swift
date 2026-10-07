@@ -280,7 +280,7 @@ public struct CodeBlockStyle: Sendable {
     public var paragraphSpacing: CGFloat
     /// Left/right indent (in points) so code blocks don't run into the gutter.
     public var horizontalIndent: CGFloat
-    // Marc: new. The default 0 keeps the upstream fill width.
+    // Marcdown: new. The default 0 keeps the upstream fill width.
     /// How far (points) the background reaches past the text column on each
     /// side, into the text inset. With `horizontalIndent` 0 the code lines up
     /// with the body text and the fill still frames it.
@@ -290,12 +290,12 @@ public struct CodeBlockStyle: Sendable {
         fontSizeScale: CGFloat = 0.85,
         paragraphSpacing: CGFloat = 2.0,
         horizontalIndent: CGFloat = 12.0,
-        backgroundOutset: CGFloat = 0 // Marc:
+        backgroundOutset: CGFloat = 0 // Marcdown:
     ) {
         self.fontSizeScale = fontSizeScale
         self.paragraphSpacing = paragraphSpacing
         self.horizontalIndent = horizontalIndent
-        self.backgroundOutset = backgroundOutset // Marc:
+        self.backgroundOutset = backgroundOutset // Marcdown:
     }
 
     public static let `default` = CodeBlockStyle()
@@ -331,7 +331,7 @@ public struct ListStyle: Sendable {
     public var maximumNestingLevel: Int
     /// Extra line height added on top of the default to give list items room.
     public var extraLineHeight: CGFloat
-    // Marc: new.
+    // Marcdown: new.
     /// Space (points) between the items of one list; the last item gets the paragraph
     /// spacing. nil: the paragraph spacing after every item.
     public var itemSpacing: CGFloat?
@@ -488,7 +488,7 @@ public struct HeadingStyle: Sendable {
     public var fontMultipliers: [CGFloat]
     /// Top spacing in `em` units per heading level (1...6).
     public var topSpacingEm: [CGFloat]
-    // Marc: new.
+    // Marcdown: new.
     /// Levels from this one down draw in `theme.mutedText`. 7: none.
     public var mutedFromLevel: Int
 
@@ -594,12 +594,12 @@ public struct InlineLatexStyle: Sendable {
 public struct BlockquoteStyle: Sendable {
     /// Extra height (points) added to the default line height for blockquote lines.
     public var extraLineHeight: CGFloat
-    // Marc: new, for the quote panel (MarkdownTextLayoutFragment, MarkdownASTStyler.styleBlockquote).
+    // Marcdown: new, for the quote panel (MarkdownTextLayoutFragment, MarkdownASTStyler.styleBlockquote).
     /// Space (points) between the panel edge and the first and last line when
     /// the theme has a `blockquoteBackground`. Ignored without one.
     public var panelPadding: CGFloat
 
-    public init(extraLineHeight: CGFloat = 0, panelPadding: CGFloat = 8) { // Marc: panelPadding
+    public init(extraLineHeight: CGFloat = 0, panelPadding: CGFloat = 8) { // Marcdown: panelPadding
         self.extraLineHeight = extraLineHeight
         self.panelPadding = panelPadding
     }
@@ -633,7 +633,7 @@ public struct ParagraphStyle: Sendable {
     public var spacingFactor: CGFloat
     /// Extra height (points) added to the default paragraph line height.
     public var lineHeightExtraSpacing: CGFloat
-    // Marc: new.
+    // Marcdown: new.
     /// Height (points) of an empty source line between blocks. nil: a full line. With it, the
     /// blank lines make the gaps between blocks, and `spacingFactor` can be 0.
     public var blankLineHeight: CGFloat?
@@ -665,7 +665,7 @@ public struct OverscrollPolicy: Sendable {
     public var activationRangeFraction: CGFloat
 
     public init(
-        percent: CGFloat = 0.25, // Marc: upstream 0.5
+        percent: CGFloat = 0.25, // Marcdown: upstream 0.5
         maxPoints: CGFloat = 450,
         minPoints: CGFloat = 40,
         activationStartFraction: CGFloat = 0.15,

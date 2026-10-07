@@ -63,7 +63,7 @@ struct PreviewBody: Equatable {
 
     // MARK: Changes
 
-    /// What `marcPreview.update` needs to turn the page's blocks into new ones.
+    /// What `marcdownPreview.update` needs to turn the page's blocks into new ones.
     struct Change: Equatable {
         /// Blocks the page has before.
         var count: Int

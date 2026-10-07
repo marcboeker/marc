@@ -97,7 +97,7 @@ enum MarkdownDetection {
         isInsideCodeBlock(range: NSRange(location: location, length: 0), codeTokens: codeTokens)
     }
 
-    // Marc: tilde fences count too (`~~~`, runs of `~` scored like runs of `` ` ``), so a typed or
+    // Marcdown: tilde fences count too (`~~~`, runs of `~` scored like runs of `` ` ``), so a typed or
     // deleted tilde fence restyles the document like a backtick one.
 
     /// Count of non-overlapping ``` and ~~~ occurrences, scanning left to right —

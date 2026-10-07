@@ -30,7 +30,7 @@ final class PrintJob: NSObject, WKNavigationDelegate {
         self.title = title
         self.output = output
         self.window = window
-        folder = FileManager.default.temporaryDirectory.appending(path: "Marc-Print-\(UUID().uuidString)", directoryHint: .isDirectory)
+        folder = FileManager.default.temporaryDirectory.appending(path: "Marcdown-Print-\(UUID().uuidString)", directoryHint: .isDirectory)
         let configuration = WKWebViewConfiguration()
         // The page is the user's own Markdown, but raw HTML in it must not run scripts.
         configuration.defaultWebpagePreferences.allowsContentJavaScript = false

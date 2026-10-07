@@ -381,7 +381,7 @@ enum InlineParser {
         let c = ns.character(at: i)
         let c1 = peek(ns, i + 1, len)
         let c2 = peek(ns, i + 2, len)
-        // Marc: embeds, wiki links and LaTeX are switchable (MarkdownEngineFeatures).
+        // Marcdown: embeds, wiki links and LaTeX are switchable (MarkdownEngineFeatures).
         if c == bang, c1 == lbracket, c2 == lbracket, MarkdownEngineFeatures.imageEmbeds {
             return matchImageEmbed(ns, len, start: i)
         }

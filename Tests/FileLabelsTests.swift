@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct FileLabelsTests {
     private typealias Label = FileLabels.Label

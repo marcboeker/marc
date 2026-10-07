@@ -21,7 +21,7 @@ extension NativeTextView {
 
         let pasteboard = NSPasteboard.general
 
-        // Marc: embedder gets the first look. ⌥⇧⌘V never gets here (`pasteAsPlainText`).
+        // Marcdown: embedder gets the first look. ⌥⇧⌘V never gets here (`pasteAsPlainText`).
         if onWillPaste?(self, pasteboard) == true { return }
 
         if let imageEmbed = onPasteImage?(pasteboard), !imageEmbed.isEmpty {
@@ -77,7 +77,7 @@ extension NativeTextView {
         pasteAsPlainText(sender)
     }
 
-    // Marc: ⌥⇧⌘V ("Paste and Match Style"). Inserts the plain-text flavor
+    // Marcdown: ⌥⇧⌘V ("Paste and Match Style"). Inserts the plain-text flavor
     // verbatim; skips `onWillPaste` and the engine's HTML→Markdown conversion.
     override func pasteAsPlainText(_ sender: Any?) {
         guard isEditable, let text = NSPasteboard.general.string(forType: .string), !text.isEmpty else {
@@ -161,7 +161,7 @@ extension NativeTextView {
     }
 
     override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
-        // Marc: `saveDocument:` (see NativeTextView+SaveRequest.swift) is always available.
+        // Marcdown: `saveDocument:` (see NativeTextView+SaveRequest.swift) is always available.
         if item.action == #selector(NSDocument.save(_:)) { return true }
         if item.action == #selector(paste(_:)) {
             let pasteboard = NSPasteboard.general

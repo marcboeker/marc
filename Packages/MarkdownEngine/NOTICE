@@ -1,4 +1,4 @@
-MarkdownEngine (vendored fork for Marc)
+MarkdownEngine (vendored fork for Marcdown)
 
 Upstream:   https://github.com/nodes-app/swift-markdown-engine
 Commit:     16c2b0c30d8330d35f3a53b6b2e0d4cd03101b00
@@ -16,7 +16,7 @@ tests use APIs removed in item 12 (`SyntaxHighlighter.backgroundColor()`, the ta
 `codeBackgroundColor` parameters), and BottomOverscrollPolicyTests expects the old
 overscroll default (item 16).
 
-Changes by Marc (all marked with `// Marc:` or in files starting with a Marc comment):
+Changes by Marcdown (all marked with `// Marcdown:` or in files starting with a Marcdown comment):
 
 1. NativeTextViewWrapper: new public hooks and init parameters
    - onTextViewReady: ((NSTextView) -> Void)?   (async on main queue after creation)
@@ -40,8 +40,8 @@ Changes by Marc (all marked with `// Marc:` or in files starting with a Marc com
    Used in InlineParser.matchBuiltIn, BlockParser.isBlockLatexOpen, WikiLinkService
    (display text == raw text when off), MarkdownListHandler (no `[[` completion, no `->` arrow).
 7. Extensions (==highlight==) and directives (@name) are already off by default upstream
-   (empty `configuration.extensions` / `.directives`); Marc registers only StrikethroughExtension.
-8. Key bindings: the engine binds none of the shortcuts Marc uses (checked: it has no
+   (empty `configuration.extensions` / `.directives`); Marcdown registers only StrikethroughExtension.
+8. Key bindings: the engine binds none of the shortcuts Marcdown uses (checked: it has no
    key-equivalent or menu code besides ⌘↵ for wiki previews, which is inert with wiki links off).
    Nothing had to be removed.
 9. NativeTextViewWrapper.updateNSView: configuration.paragraph (line height extra spacing,

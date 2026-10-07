@@ -110,7 +110,7 @@ extension MarkdownStyler {
         return attrs
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// The file or URL in an image's `(…)`: without a `"title"` after it, and without `<>`.
     static func imageSource(_ destination: String) -> String {
         let trimmed = destination.trimmingCharacters(in: .whitespaces)

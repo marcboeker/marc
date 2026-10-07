@@ -1,18 +1,18 @@
 import AppKit
 import Testing
 import UniformTypeIdentifiers
-@testable import Marc
+@testable import Marcdown
 
 /// Per-file state and the outside-change policy for files the editor does not show.
 @MainActor
-struct MarcFileTests {
-    private let folder = FileManager.default.temporaryDirectory.appending(path: "MarcFileTests-\(UUID().uuidString)")
+struct MarcdownFileTests {
+    private let folder = FileManager.default.temporaryDirectory.appending(path: "MarcdownFileTests-\(UUID().uuidString)")
 
-    private func makeFile(_ text: String) throws -> (MarcFile, URL) {
+    private func makeFile(_ text: String) throws -> (MarcdownFile, URL) {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let url = folder.appending(path: "note.md")
         try Data(text.utf8).write(to: url)
-        return (try MarcFile(contentsOf: url, ofType: UTType.markdown.identifier), url)
+        return (try MarcdownFile(contentsOf: url, ofType: UTType.markdown.identifier), url)
     }
 
     private func disk(_ url: URL) throws -> String {
@@ -20,7 +20,7 @@ struct MarcFileTests {
     }
 
     @Test func dirtyFollowsEditsAndClear() {
-        let file = MarcFile()
+        let file = MarcdownFile()
         #expect(!file.isDirty)
         file.edit("text")
         #expect(file.isDirty)
@@ -84,7 +84,7 @@ struct MarcFileTests {
 
     @Test func closingAFileWithAnOpenReviewShowsItInstead() async {
         let store = OpenFiles()
-        let a = MarcFile(), b = MarcFile()
+        let a = MarcdownFile(), b = MarcdownFile()
         [a, b].forEach(store.show)
         a.needsDiskReview = true
         #expect(await store.close(a) == false)
@@ -94,7 +94,7 @@ struct MarcFileTests {
 
     @Test func closingAllStopsAtAReviewBeforeClosingAnything() async {
         let store = OpenFiles()
-        let a = MarcFile(), b = MarcFile()
+        let a = MarcdownFile(), b = MarcdownFile()
         [a, b].forEach(store.show)
         b.needsDiskReview = true
         #expect(await store.closeAll() == false)

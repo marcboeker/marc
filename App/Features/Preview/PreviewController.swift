@@ -4,7 +4,7 @@ import WebKit
 
 /// The window's rendered preview: one web view for the window's life, so a mode switch or a file
 /// switch does not reload it. It loads the page once; later text, folder and style changes go
-/// through our script (`marcPreview.update`). JavaScript of the page itself is off. The page and its
+/// through our script (`marcdownPreview.update`). JavaScript of the page itself is off. The page and its
 /// files come through `PreviewScheme`: the web view reads no files itself, and frames do not load.
 @MainActor
 @Observable
@@ -89,7 +89,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     private static let rules = #"[{"trigger":{"url-filter":".*","resource-type":["document"],"load-context":["child-frame"]},"action":{"type":"block"}}]"#
     /// WebKit keeps compiled lists between launches. The name has a hash of the rules, so a
     /// stored list with older rules is never used.
-    private static let rulesIdentifier = "MarcPreviewNoFrames-"
+    private static let rulesIdentifier = "MarcdownPreviewNoFrames-"
         + SHA256.hash(data: Data(rules.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
     /// The list once one window has it; later windows add it at once.
     private static var noFrames: WKContentRuleList?
@@ -176,7 +176,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
 
     /// The page did not have the blocks Swift has (or the script failed): send all of them.
     private func update(_ change: PreviewBody.Change, base: String, css: String) {
-        run("return marcPreview.update(base, css, change)", ["base": base, "css": css, "change": change.arguments]) { [weak self] result in
+        run("return marcdownPreview.update(base, css, change)", ["base": base, "css": css, "change": change.arguments]) { [weak self] result in
             guard let self, !change.full else { return }
             if case .success(let value) = result, (value as? NSNumber)?.intValue != -1 { return }
             update(sentBody.full, base: base, css: css)
@@ -263,7 +263,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     private func scroll(toEditorLine line: Int, force: Bool = false) {
         guard let target = sourceMap.target(forEditorLine: line), force || target != lastScroll else { return }
         lastScroll = target
-        run("marcPreview.scrollToBlock(position, fraction)", ["position": target.position, "fraction": target.fraction])
+        run("marcdownPreview.scrollToBlock(position, fraction)", ["position": target.position, "fraction": target.fraction])
     }
 
     /// Split: follow the editor's top visible line. One way only. Lines count in the rendered text:
@@ -317,7 +317,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
         case .previousMatch:
             find(backwards: true)
         case .setSearchString:
-            webView.callAsyncJavaScript("return marcPreview.selectedText()", arguments: [:], in: nil, in: .defaultClient) { [weak self] result in
+            webView.callAsyncJavaScript("return marcdownPreview.selectedText()", arguments: [:], in: nil, in: .defaultClient) { [weak self] result in
                 guard let self, case .success(let value) = result, let text = value as? String, !text.isEmpty else { return }
                 findText = text
                 isFinding = true
@@ -331,7 +331,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
 
     /// From the find bar while typing: start again at the top, so the first match shows.
     func findFromTop() {
-        webView.callAsyncJavaScript("marcPreview.clearSelection()", arguments: [:], in: nil, in: .defaultClient) { [weak self] _ in
+        webView.callAsyncJavaScript("marcdownPreview.clearSelection()", arguments: [:], in: nil, in: .defaultClient) { [weak self] _ in
             self?.find(backwards: false)
         }
     }
@@ -349,7 +349,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
             guard let self else { return }
             findFailed = !result.matchFound
             // WebKit scrolls the match just into view, at the edge; put it in the middle.
-            if result.matchFound { run("marcPreview.centerSelection()") }
+            if result.matchFound { run("marcdownPreview.centerSelection()") }
         }
     }
 
@@ -360,13 +360,13 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
         findFailed = false
         // WebKit has no call to hide its match highlight; a search that finds nothing removes it.
         webView.find(UUID().uuidString, configuration: WKFindConfiguration()) { _ in }
-        run("marcPreview.clearSelection()")
+        run("marcdownPreview.clearSelection()")
         if focusing { focus() }
     }
 
     // MARK: Navigation
 
-    /// Only our own page loads. A link click is opened by Marc or the default app, never in here.
+    /// Only our own page loads. A link click is opened by Marcdown or the default app, never in here.
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url else { return decisionHandler(.cancel) }
@@ -399,7 +399,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     private func follow(_ url: URL) {
         switch PreviewLink.classify(url, baseFolder: shown.folder) {
         case .anchor(let name):
-            run("marcPreview.scrollToAnchor(name)", ["name": name])
+            run("marcdownPreview.scrollToAnchor(name)", ["name": name])
         case .markdownFile(let file):
             OpenFiles.shared.open(file)
         case .localFile(let file):

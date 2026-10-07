@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import Marc
+@testable import Marcdown
 
 /// Test input marks the selection with `|` (cursor) or `«…»` (range).
 private func make(_ marked: String) -> TextEdit {

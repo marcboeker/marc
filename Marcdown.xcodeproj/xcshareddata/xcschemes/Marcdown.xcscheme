@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C1C7F8FAB8BF12B156A48989"
-               BuildableName = "Marc.app"
-               BlueprintName = "Marc"
-               ReferencedContainer = "container:Marc.xcodeproj">
+               BuildableName = "Marcdown.app"
+               BlueprintName = "Marcdown"
+               ReferencedContainer = "container:Marcdown.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -30,9 +30,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F0363BA1AF154D3D2FE3F82B"
-               BuildableName = "MarcTests.xctest"
-               BlueprintName = "MarcTests"
-               ReferencedContainer = "container:Marc.xcodeproj">
+               BuildableName = "MarcdownTests.xctest"
+               BlueprintName = "MarcdownTests"
+               ReferencedContainer = "container:Marcdown.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -47,9 +47,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C1C7F8FAB8BF12B156A48989"
-            BuildableName = "Marc.app"
-            BlueprintName = "Marc"
-            ReferencedContainer = "container:Marc.xcodeproj">
+            BuildableName = "Marcdown.app"
+            BlueprintName = "Marcdown"
+            ReferencedContainer = "container:Marcdown.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -59,9 +59,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F0363BA1AF154D3D2FE3F82B"
-               BuildableName = "MarcTests.xctest"
-               BlueprintName = "MarcTests"
-               ReferencedContainer = "container:Marc.xcodeproj">
+               BuildableName = "MarcdownTests.xctest"
+               BlueprintName = "MarcdownTests"
+               ReferencedContainer = "container:Marcdown.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -83,9 +83,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C1C7F8FAB8BF12B156A48989"
-            BuildableName = "Marc.app"
-            BlueprintName = "Marc"
-            ReferencedContainer = "container:Marc.xcodeproj">
+            BuildableName = "Marcdown.app"
+            BlueprintName = "Marcdown"
+            ReferencedContainer = "container:Marcdown.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -102,9 +102,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C1C7F8FAB8BF12B156A48989"
-            BuildableName = "Marc.app"
-            BlueprintName = "Marc"
-            ReferencedContainer = "container:Marc.xcodeproj">
+            BuildableName = "Marcdown.app"
+            BlueprintName = "Marcdown"
+            ReferencedContainer = "container:Marcdown.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

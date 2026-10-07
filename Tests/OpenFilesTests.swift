@@ -1,12 +1,12 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
-/// The store's list and selection rules. Files are bare MarcFile objects: no AppKit document list, no window.
+/// The store's list and selection rules. Files are bare MarcdownFile objects: no AppKit document list, no window.
 @MainActor
 struct OpenFilesTests {
     private let store = OpenFiles(pins: Pins(defaults: UserDefaults(suiteName: "OpenFilesTests-\(UUID().uuidString)")!, key: "pins"))
-    private let a = MarcFile(), b = MarcFile(), c = MarcFile()
+    private let a = MarcdownFile(), b = MarcdownFile(), c = MarcdownFile()
 
     private func showAll() {
         [a, b, c].forEach(store.show)

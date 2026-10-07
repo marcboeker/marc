@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct PrintTests {
     private func html(_ s: String) -> String { MarkdownHTML.render(s) }

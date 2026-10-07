@@ -169,7 +169,7 @@ enum DocumentAST {
         case .heading:
             return heading(block.range, ns, scoped: scoped, registry: registry)
         case .blockquote:
-            // Marc: fenced code inside the quote is not inline text.
+            // Marcdown: fenced code inside the quote is not inline text.
             guard scoped else { return .blockquote(range: block.range, inlines: []) }
             var inlines: [InlineNode] = []
             var cursor = block.range.location
@@ -242,7 +242,7 @@ enum DocumentAST {
     }
 
     /// ATX heading: optional indent, `#`×level, space(s), then inline content.
-    /// Marc: or a setext heading — text lines, then a `===`/`---` underline (the marker).
+    /// Marcdown: or a setext heading — text lines, then a `===`/`---` underline (the marker).
     private static func heading(_ range: NSRange, _ ns: NSString, scoped: Bool = true, registry: ExtensionRegistry = .empty) -> BlockNode {
         let end = NSMaxRange(range)
         let lastLine = ns.lineRange(for: NSRange(location: max(range.location, end - 1), length: 0))
@@ -379,7 +379,7 @@ enum DocumentAST {
 
     private static func isLineBreak(_ c: unichar) -> Bool { c == 0x0A || c == 0x0D }
 
-    // Marc: new.
+    // Marcdown: new.
     /// A closed code fence inside a blockquote: its lines from the opening fence through the closing one.
     struct QuoteCodeRun {
         let range: NSRange

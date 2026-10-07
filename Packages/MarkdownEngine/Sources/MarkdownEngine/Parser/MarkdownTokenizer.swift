@@ -24,7 +24,7 @@ enum MarkdownTokenizer {
         let nsText = text as NSString
         guard NSMaxRange(openingMarker) <= nsText.length else { return nil }
 
-        // Marc: after the whole fence run (``` or ~~~, any length); upstream skipped 3 characters.
+        // Marcdown: after the whole fence run (``` or ~~~, any length); upstream skipped 3 characters.
         let langString = nsText.substring(with: openingMarker)
             .drop { $0 == "`" || $0 == "~" }
             .trimmingCharacters(in: .whitespacesAndNewlines)

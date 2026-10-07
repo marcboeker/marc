@@ -36,12 +36,12 @@ enum PreviewRenderer {
         <html>
         <head>
         <meta charset="utf-8">
-        \(base)<style id="marc-style">
+        \(base)<style id="marcdown-style">
         \(stylesheet(style))
         </style>
         </head>
         <body>
-        <main id="marc-body">\(body)</main>
+        <main id="marcdown-body">\(body)</main>
         </body>
         </html>
         """
@@ -136,12 +136,12 @@ enum PreviewRenderer {
             }
         }
 
-        window.marcPreview = {
+        window.marcdownPreview = {
             update(base, css, change) {
                 setBase(base);
-                const style = document.getElementById('marc-style');
+                const style = document.getElementById('marcdown-style');
                 if (style.textContent !== css) style.textContent = css;
-                return setBody(document.getElementById('marc-body'), change);
+                return setBody(document.getElementById('marcdown-body'), change);
             },
             // Put `fraction` of the element at the top of the window, below the page padding.
             scrollToBlock(position, fraction) {
@@ -166,7 +166,7 @@ enum PreviewRenderer {
             selectedText() { return String(window.getSelection() || ''); },
             clearSelection() { window.getSelection().removeAllRanges(); },
         };
-        addHeadingIDs(document.getElementById('marc-body'));
+        addHeadingIDs(document.getElementById('marcdown-body'));
     })();
     """#
 }

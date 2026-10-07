@@ -373,7 +373,7 @@ extension NativeTextView {
             propagateCaretRevealToEnclosingScroller(range: range)
             return
         }
-        // Marc: explicit reveal in full-width mode too. The text view is a subview of the
+        // Marcdown: explicit reveal in full-width mode too. The text view is a subview of the
         // container (the scroll view's document view), and native scrollRangeToVisible does
         // not scroll through it, so arrow keys never revealed the caret.
         // Explicit reveal: native scrollRangeToVisible can't position the container's subview.

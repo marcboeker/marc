@@ -65,7 +65,7 @@ public enum WikiLinkService {
         from storageText: String,
         nameForID: ((String) -> String?)? = nil
     ) -> (display: String, metadata: [RangeKey: LinkMetadata]) {
-        // Marc: with wiki links off, display text is the raw text.
+        // Marcdown: with wiki links off, display text is the raw text.
         guard MarkdownEngineFeatures.wikiLinks else { return (storageText, [:]) }
         let nsStorage = storageText as NSString
         let fullRange = NSRange(location: 0, length: nsStorage.length)
@@ -131,7 +131,7 @@ public enum WikiLinkService {
         existingMetadata: [RangeKey: LinkMetadata],
         textStorage: NSTextStorage?
     ) -> (storage: String, metadata: [RangeKey: LinkMetadata]) {
-        // Marc: with wiki links off, storage text is the raw text.
+        // Marcdown: with wiki links off, storage text is the raw text.
         guard MarkdownEngineFeatures.wikiLinks else { return (displayText, [:]) }
         let nsDisplay = displayText as NSString
         // No `[[` anywhere → storage == display; skip the O(document) rebuild.
@@ -212,7 +212,7 @@ public enum WikiLinkService {
         let nsPrevStorage = previousStorage as NSString
 
         // Only contiguous, small, well-formed edits take the fast path.
-        // Marc: nil sends the caller to `makeStorageState`, which is a no-op when off.
+        // Marcdown: nil sends the caller to `makeStorageState`, which is a no-op when off.
         guard MarkdownEngineFeatures.wikiLinks else { return nil }
         guard delta != Int.min,
               editedRange.location != NSNotFound,

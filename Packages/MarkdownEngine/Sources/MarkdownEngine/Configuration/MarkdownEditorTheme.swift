@@ -79,7 +79,7 @@ public struct MarkdownEditorTheme: Sendable {
     /// Background color used for `==highlight==` inline markup.
     public var highlightColor: NSColor
 
-    // Marc: the code, block quote and table colors below are new. Upstream took the code fill from
+    // Marcdown: the code, block quote and table colors below are new. Upstream took the code fill from
     // `SyntaxHighlighter.backgroundColor()` and drew quote bars and table lines in `mutedText`.
 
     // MARK: Code
@@ -108,7 +108,7 @@ public struct MarkdownEditorTheme: Sendable {
     /// Rules between a rendered table's rows.
     public var tableBorder: NSColor
 
-    // Marc: new keys. nil keeps the look from before them.
+    // Marcdown: new keys. nil keeps the look from before them.
 
     // MARK: Rules and markers
 
@@ -138,7 +138,7 @@ public struct MarkdownEditorTheme: Sendable {
         latexDarkModeText: NSColor = .white,
         strikethroughColor: NSColor = .labelColor,
         highlightColor: NSColor = .systemOrange.withAlphaComponent(0.4),
-        // Marc: new colors.
+        // Marcdown: new colors.
         codeBlockBackground: NSColor = .overlay(dark: 0.055, light: 0.035),
         codeBlockLanguage: NSColor = .tertiaryLabelColor,
         inlineCodeBackground: NSColor = .overlay(dark: 0.09, light: 0.06),
@@ -165,7 +165,7 @@ public struct MarkdownEditorTheme: Sendable {
         self.latexDarkModeText = latexDarkModeText
         self.strikethroughColor = strikethroughColor
         self.highlightColor = highlightColor
-        // Marc: new colors.
+        // Marcdown: new colors.
         self.codeBlockBackground = codeBlockBackground
         self.codeBlockLanguage = codeBlockLanguage
         self.inlineCodeBackground = inlineCodeBackground
@@ -188,7 +188,7 @@ public struct MarkdownEditorTheme: Sendable {
     public static let `default` = MarkdownEditorTheme()
 }
 
-// Marc: new helper for the default theme colors.
+// Marcdown: new helper for the default theme colors.
 extension NSColor {
     /// Text-colored wash: white at `dark` alpha on a dark appearance, black at
     /// `light` alpha on a light one. Tints any background the same way.

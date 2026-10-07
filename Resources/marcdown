@@ -1,5 +1,5 @@
 #!/bin/sh
-# marc — open files in Marc. Missing files are created empty (the folder must exist).
+# marcdown — open files in Marcdown. Missing files are created empty (the folder must exist).
 # An http(s) URL is converted to Markdown and opened as a new untitled document.
 # Options (e.g. -n, -g) go to `open`. With no arguments, just open the app.
 set -eu
@@ -8,7 +8,7 @@ set -eu
 app=$(cd "$(dirname "$(realpath "$0")")/../.." && pwd)
 case $app in
     *.app) ;;
-    *) app=Marc ;;
+    *) app=Marcdown ;;
 esac
 
 n=$#
@@ -21,11 +21,11 @@ while [ "$n" -gt 0 ]; do
             set -- "$@" "$arg"
             ;;
         http://* | https://*)
-            if [ "$app" = Marc ]; then
-                echo "marc: URLs need the script inside Marc.app" >&2
+            if [ "$app" = Marcdown ]; then
+                echo "marcdown: URLs need the script inside Marcdown.app" >&2
                 exit 1
             fi
-            clip=$("$app/Contents/MacOS/Marc" --clip "$arg")
+            clip=$("$app/Contents/MacOS/Marcdown" --clip "$arg")
             set -- "$@" "$clip"
             ;;
         *)
@@ -36,7 +36,7 @@ while [ "$n" -gt 0 ]; do
             if [ ! -e "$path" ]; then
                 dir=$(dirname "$path")
                 if [ ! -d "$dir" ]; then
-                    echo "marc: $dir: no such directory" >&2
+                    echo "marcdown: $dir: no such directory" >&2
                     exit 1
                 fi
                 touch "$path"

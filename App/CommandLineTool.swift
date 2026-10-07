@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// "Install Command Line Tool…": symlinks the bundled `marc` script into ~/.local/bin.
+/// "Install Command Line Tool…": symlinks the bundled `marcdown` script into ~/.local/bin.
 struct CommandLineToolCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .appInfo) {
@@ -17,7 +17,7 @@ enum CommandLineTool {
         do {
             let link = try createLink()
             alert.messageText = "Command line tool installed"
-            alert.informativeText = "\(link.path) now points to Marc. Make sure \(link.deletingLastPathComponent().path) is in your PATH, then run: marc notes.md"
+            alert.informativeText = "\(link.path) now points to Marcdown. Make sure \(link.deletingLastPathComponent().path) is in your PATH, then run: marcdown notes.md"
         } catch {
             alert.alertStyle = .warning
             alert.messageText = "Could not install the command line tool"
@@ -27,12 +27,12 @@ enum CommandLineTool {
     }
 
     private static func createLink() throws -> URL {
-        guard let script = Bundle.main.url(forResource: "marc", withExtension: nil) else {
-            throw CocoaError(.fileNoSuchFile, userInfo: [NSLocalizedDescriptionKey: "The marc script is missing from the app bundle."])
+        guard let script = Bundle.main.url(forResource: "marcdown", withExtension: nil) else {
+            throw CocoaError(.fileNoSuchFile, userInfo: [NSLocalizedDescriptionKey: "The marcdown script is missing from the app bundle."])
         }
         let fm = FileManager.default
         let bin = fm.homeDirectoryForCurrentUser.appending(path: ".local/bin", directoryHint: .isDirectory)
-        let link = bin.appending(path: "marc")
+        let link = bin.appending(path: "marcdown")
         try fm.createDirectory(at: bin, withIntermediateDirectories: true)
         // Replace an old symlink, but never a real file.
         if let existing = try? fm.destinationOfSymbolicLink(atPath: link.path) {

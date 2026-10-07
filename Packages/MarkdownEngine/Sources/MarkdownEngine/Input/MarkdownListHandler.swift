@@ -133,7 +133,7 @@ struct MarkdownLists {
             let nsText = textView.string as NSString
             let previousCharRange = NSRange(location: insertionLocation - 1, length: 1)
             let previousChar = nsText.substring(with: previousCharRange)
-            if previousChar == "-", MarkdownEngineFeatures.arrowSubstitution { // Marc:
+            if previousChar == "-", MarkdownEngineFeatures.arrowSubstitution { // Marcdown:
                 MarkdownLists.performEdit(textView, replace: previousCharRange, with: "→")
                 textView.setSelectedRange(NSRange(location: insertionLocation, length: 0))
                 return false
@@ -144,7 +144,7 @@ struct MarkdownLists {
         if replacementString == "[" {
             let nsText = textView.string as NSString
             let insertionLocation = affectedCharRange.location
-            if insertionLocation > 0, MarkdownEngineFeatures.wikiLinks { // Marc: no `[[` completion
+            if insertionLocation > 0, MarkdownEngineFeatures.wikiLinks { // Marcdown: no `[[` completion
                 let prevChar = nsText.substring(with: NSRange(location: insertionLocation - 1, length: 1))
                 if prevChar == "[" {
                     let hasAutoCloseBracket = insertionLocation < nsText.length

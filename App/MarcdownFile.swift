@@ -10,7 +10,7 @@ extension UTType {
 /// window shows the selected one. NSDocument still does reading, saving, autosave, recents and the
 /// unsaved-changes questions. Info.plist names this class (`NSDocumentClass`) for the Markdown type.
 @Observable
-final class MarcFile: NSDocument, Identifiable {
+final class MarcdownFile: NSDocument, Identifiable {
     let id = UUID()
 
     /// The editor writes every edit here through `edit(_:)`.
@@ -149,7 +149,7 @@ final class MarcFile: NSDocument, Identifiable {
             if wait { try? await Task.sleep(for: .milliseconds(300)) }   // a newer change cancels this
             guard !Task.isCancelled else { return }
             let (headings, issues) = await Task.detached {
-                (Marc.outline(of: text), Marc.lint(text, documentFolder: folder))
+                (Marcdown.outline(of: text), Marcdown.lint(text, documentFolder: folder))
             }.value
             guard !Task.isCancelled, let self else { return }
             isAnalyzed = true

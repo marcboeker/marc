@@ -1,9 +1,9 @@
 import Foundation
 import Testing
 import WebKit
-@testable import Marc
+@testable import Marcdown
 
-/// `marcPreview.update` in a real web view: an edit replaces only the blocks that changed.
+/// `marcdownPreview.update` in a real web view: an edit replaces only the blocks that changed.
 @MainActor
 struct PreviewUpdateTests {
     private let style = DocumentStyle(fontFamily: nil, fontSize: 15, lineSpacing: 2, lineWidth: nil)
@@ -182,7 +182,7 @@ struct PreviewUpdateTests {
 
         func send(_ change: PreviewBody.Change) async throws -> Int {
             let result = try await webView.callAsyncJavaScript(
-                "return marcPreview.update(base, css, change)",
+                "return marcdownPreview.update(base, css, change)",
                 arguments: ["base": "", "css": PreviewRenderer.stylesheet(style), "change": change.arguments],
                 contentWorld: .defaultClient)
             return (result as? NSNumber)?.intValue ?? -2
@@ -206,7 +206,7 @@ struct PreviewUpdateTests {
             try await evaluate("""
                 const fresh = document.createElement('main');
                 fresh.innerHTML = html;
-                const shown = document.getElementById('marc-body').cloneNode(true);
+                const shown = document.getElementById('marcdown-body').cloneNode(true);
                 for (const heading of shown.querySelectorAll('[id]')) heading.removeAttribute('id');
                 return shown.innerHTML === fresh.innerHTML;
                 """, ["html": body.html]) as? Bool ?? false

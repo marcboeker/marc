@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import Testing
 import MarkdownEngine
-@testable import Marc
+@testable import Marcdown
 
 /// Checks the engine fork's hooks through a real (offscreen) editor.
 @MainActor

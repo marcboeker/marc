@@ -4,7 +4,7 @@ import Foundation
 enum PreviewLink: Equatable {
     /// `#name` in this document: scroll the preview.
     case anchor(String)
-    /// A Markdown file: open it in Marc.
+    /// A Markdown file: open it in Marcdown.
     case markdownFile(URL)
     /// Any other local file or folder: show it in Finder. Never open it: it could be an app or a script.
     case localFile(URL)

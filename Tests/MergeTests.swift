@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct MergeTests {
     @Test func separateEditsMergeCleanly() {

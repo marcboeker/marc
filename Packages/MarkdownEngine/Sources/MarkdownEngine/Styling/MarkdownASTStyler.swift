@@ -62,7 +62,7 @@ enum MarkdownASTStyler {
             baseLineHeight: baseLineHeight,
             baseParagraphSpacing: baseParagraphSpacing,
             codeFont: codeFont,
-            // Marc: `codeBackground` removed; code fills come from the theme.
+            // Marcdown: `codeBackground` removed; code fills come from the theme.
             codeParagraphStyle: codePara,
             inlineMarkerFont: NSFont(name: fontName, size: hiddenSize) ?? .systemFont(ofSize: hiddenSize),
             caret: caretLocation,
@@ -89,7 +89,7 @@ enum MarkdownASTStyler {
         return attrs
     }
 
-    // Marc: new.
+    // Marcdown: new.
     private static let htmlCommentPattern = regex(#"<!--[\s\S]*?-->"#, false)
 
     /// `<!-- … -->` is a note to the writer, not text: dimmed, and without ligatures (`<!--`
@@ -388,7 +388,7 @@ enum MarkdownASTStyler {
     }
 
     /// AST list-item decoration: indent paragraph, `•` bullet, checkbox + strikethrough, all caret-aware.
-    // Marc: `isLast` is new: only the last item of a list gets the paragraph spacing below.
+    // Marcdown: `isLast` is new: only the last item of a list gets the paragraph spacing below.
     private static func styleListItem(_ item: ListItem, displayNumber: Int?, isLast: Bool, ctx: Ctx,
                                       into attrs: inout [StyledRange]) {
         let spacingBelow = isLast ? ctx.baseParagraphSpacing : ctx.config.lists.itemSpacing ?? ctx.baseParagraphSpacing
@@ -501,13 +501,13 @@ enum MarkdownASTStyler {
         ps.paragraphSpacingBefore = 0
         ps.tabStops = []
         ps.defaultTabInterval = ctx.config.lists.indentPerLevel
-        ps.firstLineHeadIndent = ctx.config.lists.markerIndent ?? ctx.config.lists.indentPerLevel // Marc: markerIndent
+        ps.firstLineHeadIndent = ctx.config.lists.markerIndent ?? ctx.config.lists.indentPerLevel // Marcdown: markerIndent
         // Wrapped lines hang under the first line's content (indent + marker
         // width). No checkbox-specific extra: the box is a drawn overlay that
         // doesn't change text advance, so adding it here (and only here, not to
         // firstLineHeadIndent) shifted an unchecked task's wrapped lines right
         // of its first line.
-        // Marc: the indent is where the first line's text really starts: the source whitespace
+        // Marcdown: the indent is where the first line's text really starts: the source whitespace
         // advances by its own width (a tab to the next tab stop). Upstream counted levels ×
         // indentPerLevel, which missed the first line by the difference.
         ps.headIndent = listIndentEnd(ws, ctx: ctx) + markerWidth
@@ -578,7 +578,7 @@ enum MarkdownASTStyler {
                 .strikethroughStyle: NSUnderlineStyle.single.rawValue,
                 .strikethroughColor: ctx.theme.strikethroughColor,
             ]
-            if let ink = ctx.theme.taskDoneText { done[.foregroundColor] = ink } // Marc:
+            if let ink = ctx.theme.taskDoneText { done[.foregroundColor] = ink } // Marcdown:
             attrs.append((NSRange(location: NSMaxRange(box), length: NSMaxRange(item.range) - NSMaxRange(box)), done))
         }
     }
@@ -645,7 +645,7 @@ enum MarkdownASTStyler {
         let baseLineHeight: CGFloat
         let baseParagraphSpacing: CGFloat
         let codeFont: NSFont
-        // Marc: `codeBackground` removed.
+        // Marcdown: `codeBackground` removed.
         let codeParagraphStyle: NSParagraphStyle
         let inlineMarkerFont: NSFont
         let caret: Int
@@ -709,13 +709,13 @@ enum MarkdownASTStyler {
             headingPara.paragraphSpacing = ctx.baseParagraphSpacing
             attrs.append((ctx.ns.paragraphRange(for: range), [.paragraphStyle: headingPara]))
             attrs.append((range, [.font: headingFont]))
-            if level >= ctx.config.headings.mutedFromLevel { // Marc:
+            if level >= ctx.config.headings.mutedFromLevel { // Marcdown:
                 attrs.append((range, [.foregroundColor: ctx.theme.mutedText]))
             }
             for marker in markers {
                 attrs.append((marker, [.foregroundColor: ctx.theme.headingMarker]))
             }
-            // Marc: a setext underline (its own line below the text) folds away while the
+            // Marcdown: a setext underline (its own line below the text) folds away while the
             // caret is outside the heading, like `#` markers do.
             if let underline = markers.first, underline.location > range.location, !ctx.isActive(range) {
                 let line = ctx.ns.paragraphRange(for: underline)
@@ -744,7 +744,7 @@ enum MarkdownASTStyler {
         case .ext(let node):
             styleExtensionBlock(node, font: font, ctx: ctx, into: &attrs)
         case .blank(let range):
-            // Marc: blank lines between blocks are the gap, at the configured height.
+            // Marcdown: blank lines between blocks are the gap, at the configured height.
             if let height = ctx.config.paragraph.blankLineHeight {
                 let blank = NSMutableParagraphStyle()
                 blank.minimumLineHeight = height
@@ -756,7 +756,7 @@ enum MarkdownASTStyler {
         }
     }
 
-    // Marc: new.
+    // Marcdown: new.
     /// An indented paragraph below a list item (after a blank line) continues that item: its
     /// lines start at the item's content edge, and the source indent folds away.
     private static func styleListContinuation(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
@@ -860,7 +860,7 @@ enum MarkdownASTStyler {
 
     /// Per-line blockquote: indent, color content, hide/show `>` markers, tag each line with its bar level
     /// and where each level's panel starts and ends.
-    // Marc: rewritten in two passes (collect lines, then style) so each line knows its neighbours'
+    // Marcdown: rewritten in two passes (collect lines, then style) so each line knows its neighbours'
     // levels for `.blockquoteEdges`. Also changed: text indent level × indentPerLevel (upstream
     // + half a level), panel padding and tail indent, content in `theme.blockquoteText` (upstream mutedText).
     private static func styleBlockquote(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
@@ -905,7 +905,7 @@ enum MarkdownASTStyler {
         let indentPerLevel = MarkdownTextLayoutFragment.blockquoteIndentPerLevel
         let hasPanel = ctx.theme.blockquoteBackground != nil
         let padding = hasPanel ? ctx.config.blockquote.panelPadding : 0
-        // Marc: fenced code inside the quote (styled after the lines, so its ink wins).
+        // Marcdown: fenced code inside the quote (styled after the lines, so its ink wins).
         let codeRuns = DocumentAST.quoteCodeRuns(range, ctx.ns)
         defer { for run in codeRuns {
             for quote in lines where NSLocationInRange(quote.line.location, run.range) && quote.contentRange.length > 0 {
@@ -925,10 +925,10 @@ enum MarkdownASTStyler {
                 (previousLevel <= i ? BlockquoteEdge.top : 0) | (nextLevel <= i ? BlockquoteEdge.bottom : 0)
             }
 
-            // Marc: the bar hangs left of the text column, so the first level's text stays on
+            // Marcdown: the bar hangs left of the text column, so the first level's text stays on
             // the text edge (see MarkdownTextLayoutFragment.blockquotePanels).
             let textIndent = CGFloat(quote.level - 1) * indentPerLevel
-            // Marc: a list item in a quote: `•` over its bullet, wrapped lines hang under its text.
+            // Marcdown: a list item in a quote: `•` over its bullet, wrapped lines hang under its text.
             let inCode = codeRuns.contains { NSLocationInRange(quote.line.location, $0.range) }
             let content = ctx.ns.substring(with: quote.contentRange)
             var hang: CGFloat = 0
@@ -976,7 +976,7 @@ enum MarkdownASTStyler {
 
     private static func styleCodeBlock(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
         let parts = codeBlockParts(range, ctx.ns)
-        // Marc: `.codeBlockBackground` from the theme (upstream `.backgroundColor` from the highlighter).
+        // Marcdown: `.codeBlockBackground` from the theme (upstream `.backgroundColor` from the highlighter).
         attrs.append((parts.codeRange, [
             .font: ctx.codeFont, .codeBlockBackground: ctx.theme.codeBlockBackground,
             .paragraphStyle: ctx.codeParagraphStyle,
@@ -997,7 +997,7 @@ enum MarkdownASTStyler {
             : [.foregroundColor: NSColor.clear, .font: ctx.codeFont]   // hiddenMarkerFont == codeFont
         if parts.openFence.length > 0 { attrs.append((parts.openFence, markerAttrs)) }
         if parts.closeFence.length > 0 { attrs.append((parts.closeFence, markerAttrs)) }
-        // Marc: indented code has no fence lines to pad its slab: half a code line above and below.
+        // Marcdown: indented code has no fence lines to pad its slab: half a code line above and below.
         if parts.openFence.length == 0, parts.content.length > 0 {
             let firstLine = ctx.ns.lineRange(for: NSRange(location: parts.content.location, length: 0))
             let lastLine = ctx.ns.lineRange(for: NSRange(location: NSMaxRange(parts.content) - 1, length: 0))
@@ -1010,7 +1010,7 @@ enum MarkdownASTStyler {
             attrs.append((firstLine, [.paragraphStyle: first]))
             attrs.append((lastLine, [.paragraphStyle: last]))
         }
-        // Marc: indented code drops its 4-column indent while the caret is outside, so it lines
+        // Marcdown: indented code drops its 4-column indent while the caret is outside, so it lines
         // up with the text like fenced code.
         if parts.openFence.length == 0, !ctx.isActive(range) {
             var cursor = parts.content.location
@@ -1030,14 +1030,14 @@ enum MarkdownASTStyler {
                 cursor = NSMaxRange(line)
             }
         }
-        // Marc: the fence hides its language, so the fragment shows it in the corner.
+        // Marcdown: the fence hides its language, so the fragment shows it in the corner.
         if !ctx.isActive(range), let language = parts.language, !language.isEmpty, parts.openFence.length > 0 {
             attrs.append((NSRange(location: parts.openFence.location, length: 1), [.codeBlockLanguage: language]))
         }
     }
 
     /// Split a fenced-code range into open fence (+language), content, close fence, and language.
-    /// Marc: ``` and ~~~ fences of any length; indented code has empty fences and its whole
+    /// Marcdown: ``` and ~~~ fences of any length; indented code has empty fences and its whole
     /// range (minus the last line break) as content.
     private static func codeBlockParts(_ range: NSRange, _ ns: NSString)
         -> (codeRange: NSRange, openFence: NSRange, content: NSRange, closeFence: NSRange, language: String?) {
@@ -1107,7 +1107,7 @@ enum MarkdownASTStyler {
                 styleInlines(node.children, font: font, ctx: ctx, into: &attrs)
 
             case .code(let range, let contentRange):
-                // Marc: no `.backgroundColor`; the fragment draws a pill from `.inlineCodeBackground`.
+                // Marcdown: no `.backgroundColor`; the fragment draws a pill from `.inlineCodeBackground`.
                 // `theme.inlineCodeText` is new.
                 var contentAttrs: [NSAttributedString.Key: Any] = [.font: ctx.codeFont]
                 if let ink = ctx.theme.inlineCodeText { contentAttrs[.foregroundColor] = ink }
@@ -1120,7 +1120,7 @@ enum MarkdownASTStyler {
                     : [.foregroundColor: ctx.theme.mutedText.withAlphaComponent(ctx.config.markers.inlineCodeMarkerAlpha),
                        .font: ctx.inlineMarkerFont]
                 for marker in markers(of: range, content: contentRange) { attrs.append((marker, markerAttrs)) }
-                if contentRange.length > 0 { // Marc: pill attribute and padding kern
+                if contentRange.length > 0 { // Marcdown: pill attribute and padding kern
                     attrs.append((range, [.inlineCodeBackground: ctx.theme.inlineCodeBackground]))
                     // Hidden backticks are ~0 wide: kern the opening one and the
                     // last code character so the pill has room inside its edges.
@@ -1161,7 +1161,7 @@ enum MarkdownASTStyler {
                 attrs.append((textRange, [
                     .link: url,
                     .underlineStyle: NSUnderlineStyle.single.rawValue,
-                    .underlineColor: ctx.theme.linkUnderline ?? ctx.theme.link, // Marc:
+                    .underlineColor: ctx.theme.linkUnderline ?? ctx.theme.link, // Marcdown:
                     .foregroundColor: ctx.theme.link,
                 ]))
             }
@@ -1244,7 +1244,7 @@ enum MarkdownASTStyler {
             case .image(let range, let alt, _, let markers):
                 if !(forceReveal || ctx.isActive(range)) {
                     shrink(markers, ctx: ctx, into: &attrs)
-                    // Marc: the `(url "title")` run hides too, like a link's, unless there is no alt
+                    // Marcdown: the `(url "title")` run hides too, like a link's, unless there is no alt
                     // text to stand for the image. A standalone image the token pass renders hides
                     // all of this anyway.
                     if alt.length > 0, markers.count >= 4 {

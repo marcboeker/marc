@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 struct PreviewTests {
     private let style = DocumentStyle(fontFamily: "Iowan Old Style", fontSize: 17, lineSpacing: 4, lineWidth: 60)
@@ -44,8 +44,8 @@ struct PreviewTests {
     @Test func pageSetsBaseFolder() {
         let folder = URL(filePath: "/Users/me/My Notes/", directoryHint: .isDirectory)
         let page = PreviewRenderer.page(body: "", baseFolder: folder, style: style)
-        #expect(page.contains("<base href=\"marc-preview://file/Users/me/My%20Notes/\">"))
-        #expect(page.contains("<main id=\"marc-body\">"))
+        #expect(page.contains("<base href=\"marcdown-preview://file/Users/me/My%20Notes/\">"))
+        #expect(page.contains("<main id=\"marcdown-body\">"))
         #expect(!PreviewRenderer.page(body: "", baseFolder: nil, style: style).contains("<base"))
     }
 
@@ -129,7 +129,7 @@ struct PreviewTests {
         URL(string: href, relativeTo: URL(string: PreviewScheme.base(base ?? folder))!)!.absoluteURL
     }
 
-    @Test func linkToMarkdownFileOpensInMarc() {
+    @Test func linkToMarkdownFileOpensInMarcdown() {
         #expect(PreviewLink.classify(resolved("other%20note.md#part"), baseFolder: folder) == .markdownFile(URL(filePath: "/Users/me/Notes/other note.md")))
         #expect(PreviewLink.classify(resolved("../Up.MARKDOWN"), baseFolder: folder) == .markdownFile(URL(filePath: "/Users/me/Up.MARKDOWN")))
         #expect(PreviewLink.classify(resolved("/a/b.md"), baseFolder: folder) == .markdownFile(URL(filePath: "/a/b.md")))
@@ -169,7 +169,7 @@ struct PreviewTests {
     // MARK: Scheme
 
     @Test func schemeMapsFiles() {
-        #expect(PreviewScheme.base(URL(filePath: "/Users/me/My Notes", directoryHint: .isDirectory)) == "marc-preview://file/Users/me/My%20Notes/")
+        #expect(PreviewScheme.base(URL(filePath: "/Users/me/My Notes", directoryHint: .isDirectory)) == "marcdown-preview://file/Users/me/My%20Notes/")
         #expect(PreviewScheme.base(nil) == "")
         #expect(PreviewScheme.fileURL(resolved("sub/a%20b.png")) == URL(filePath: "/Users/me/Notes/sub/a b.png"))
         #expect(PreviewScheme.fileURL(PreviewScheme.pageURL) == nil)
@@ -177,7 +177,7 @@ struct PreviewTests {
     }
 
     @Test func schemeGivesOutOnlyTheDocumentFolder() throws {
-        let root = FileManager.default.temporaryDirectory.appending(path: "MarcSchemeTest-\(UUID().uuidString)")
+        let root = FileManager.default.temporaryDirectory.appending(path: "MarcdownSchemeTest-\(UUID().uuidString)")
         let folder = root.appending(path: "doc", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder.appending(path: "sub"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

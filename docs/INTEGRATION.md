@@ -10,7 +10,7 @@ Phase 1 wired everything shared. Each feature edits ONLY its own folder and its 
 | Shortcuts | `App/Features/Shortcuts/` | `Tests/ShortcutsTests.swift` |
 | DropPaste | `App/Features/DropPaste/` | `Tests/DropPasteTests.swift` |
 
-Do not touch: `Marc.xcodeproj`, `Packages/`, `App/*.swift`, other features' folders, `Makefile`.
+Do not touch: `Marcdown.xcodeproj`, `Packages/`, `App/*.swift`, other features' folders, `Makefile`.
 `App/` and `Tests/` are synchronized folders: new `.swift` files are picked up without project edits
 (verified). If you need a shared change, stop and report it instead of editing.
 
@@ -21,7 +21,7 @@ make build DERIVED=.build/dd-<feature>
 make test  DERIVED=.build/dd-<feature>     # prints only results, failures, errors
 ```
 Always use a private `DERIVED` path when agents run in parallel. Tests use Swift Testing
-(`import Testing`, `@testable import Marc`) and run hosted inside the app. `import Markdown`
+(`import Testing`, `@testable import Marcdown`) and run hosted inside the app. `import Markdown`
 (swift-markdown) works in tests. Test only pure logic. Do not open windows in tests
 (`Tests/EngineHookTests.swift` shows an offscreen editor if you really need one).
 
@@ -91,7 +91,7 @@ To preserve line/column on format: compute the old line and column from `selecte
   them (inactive markers get font size 0.1 pt and shrink, code-span markers get alpha). Ranges are UTF-16
   `NSRange` into `textView.string`, the same as `NSString`. So `currentText` maps 1:1 to the file. The only
   upstream transform (wiki-link `|id` storage/display split) is off (`MarkdownEngineFeatures`), verified by test.
-- Set once in `MarcApp.init`: wiki links, `![[embeds]]`, LaTeX (`$..$`, `$$..$$`), `->` to arrow substitution
+- Set once in `MarcdownApp.init`: wiki links, `![[embeds]]`, LaTeX (`$..$`, `$$..$$`), `->` to arrow substitution
   are off. `==highlight==` and `@directives` are opt-in upstream and not registered. `~~strike~~` is registered.
   Auto-close of `(`, `[`, `{` is off; smart quotes are off.
 - **Binding**: after each edit the coordinator computes the storage string and does
@@ -105,7 +105,7 @@ To preserve line/column on format: compute the old line and column from `selecte
   checkbox toggling, blockquote-aware paste. Engine's own paste tries, in order: `onPasteImage` (unused), its raw
   Markdown flavor, HTML (only with block structure) via its own converter, plain string, file text. `onWillPaste`
   runs before all of that.
-- **Shortcuts**: the engine binds none of Marc's shortcuts (no key equivalents, only Cmd-Return for wiki previews).
+- **Shortcuts**: the engine binds none of Marcdown's shortcuts (no key equivalents, only Cmd-Return for wiki previews).
   Standard NSTextView keys apply (e.g. Cmd-Z, Cmd-A, Option-arrows). SwiftUI `Commands` shortcuts win because
   menu key equivalents are matched first. The engine also listens for bus notifications (`MarkdownEditorBus`, e.g.
   `applyBoldRequest`) and has `didMarkdownBold` etc. on its coordinator; they are not wired here and their toggle

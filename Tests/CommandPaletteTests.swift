@@ -1,6 +1,6 @@
 import AppKit
 import Testing
-@testable import Marc
+@testable import Marcdown
 
 /// The palette's pure logic: fuzzy match, shortcut text, menu walk, refresh, lookup and exclusions, recency,
 /// ranking, selection, files.
@@ -107,14 +107,14 @@ struct CommandPaletteTests {
         let bar = NSMenu(title: "Main")
         bar.autoenablesItems = false
         [
-            menu("Marc", [
-                item("About Marc", "orderFrontStandardAboutPanel:"),
+            menu("Marcdown", [
+                item("About Marcdown", "orderFrontStandardAboutPanel:"),
                 item("Settings…", key: ","),
                 .separator(),
                 menu("Services", [item("Make Sticky", key: "Y")]),
-                item("Hide Marc", "hide:", key: "h"),
+                item("Hide Marcdown", "hide:", key: "h"),
                 item("Hide Others", "hideOtherApplications:", key: "h", [.command, .option]),
-                item("Quit Marc", "terminate:", key: "q"),
+                item("Quit Marcdown", "terminate:", key: "q"),
             ]),
             menu("File", [
                 item("New", key: "n"),
@@ -144,7 +144,7 @@ struct CommandPaletteTests {
                 item("notes", key: "1", [.command, .option]),
                 item("Bring All to Front", "arrangeInFront:"),
             ]),
-            menu("Help", [item("Marc Help", "showHelp:", key: "?")]),
+            menu("Help", [item("Marcdown Help", "showHelp:", key: "?")]),
         ].forEach(bar.addItem)
         return bar
     }
@@ -160,7 +160,7 @@ struct CommandPaletteTests {
     @Test func commandsCarryPathKeysAndShortcuts() throws {
         let commands = PaletteItems.commands(in: mainMenu())
         #expect(commands.map(\.id) == [
-            "Marc/Settings…", "File/New", "File/Close", "File/Pin File", "Edit/Find/Find…", "Edit/Find/Find Next",
+            "Marcdown/Settings…", "File/New", "File/Close", "File/Pin File", "Edit/Find/Find…", "Edit/Find/Find Next",
             "View/Show Sidebar", "View/Enter Full Screen", "Window/Previous File",
         ])
         #expect(commands.map(\.shortcut) == ["⌘,", "⌘N", "⌘W", "⌘D", "⌘F", "⌘G", "⌃⌘S", "⌃⌘F", "⇧⌘["])
@@ -191,7 +191,7 @@ struct CommandPaletteTests {
         #expect(PaletteItem.category(of: ["Format", "Bold"]) == "Format")
         #expect(PaletteItem.category(of: ["Edit", "Find", "Find Next"]) == "Find")
         #expect(PaletteItem.category(of: ["Window", "Next File"]) == "Go")
-        #expect(PaletteItem.category(of: ["Marc", "Settings…"]) == "App")
+        #expect(PaletteItem.category(of: ["Marcdown", "Settings…"]) == "App")
         #expect(PaletteItem.category(of: ["Tools", "Word Count"]) == "Tools")   // a new menu names itself
     }
 
@@ -353,8 +353,8 @@ struct CommandPaletteTests {
         return url
     }
 
-    private func open(_ url: URL?) -> MarcFile {
-        let file = MarcFile()
+    private func open(_ url: URL?) -> MarcdownFile {
+        let file = MarcdownFile()
         file.fileURL = url
         return file
     }
