@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Editor font, font size, line spacing and width. Shared by all windows, saved in UserDefaults.
+/// Editor font, font size, line spacing and line width. Shared by all windows, saved in UserDefaults.
 @MainActor
 @Observable
 final class AppearanceSettings {
@@ -11,13 +11,16 @@ final class AppearanceSettings {
     static let defaultFontSize: CGFloat = 15
     static let fontSizeRange: ClosedRange<CGFloat> = 10...32
     static let defaultLineSpacing: CGFloat = 2
-    static let defaultWidthFraction: CGFloat = 1
+    /// Characters per line: the 65–75 that read best, with room for a mono font's wider letters.
+    static let defaultLineWidth = 72
+    static let lineWidthRange: ClosedRange<Int> = 40...140
 
     private enum Key {
         static let fontFamily = "editorFontFamily"
         static let fontSize = "editorFontSize"
         static let lineSpacing = "editorLineSpacing"
-        static let widthFraction = "editorWidthFraction"
+        static let lineWidth = "editorLineWidth"
+        static let limitsLineWidth = "editorLimitsLineWidth"
         static let showsMarkdownSource = "editorShowsMarkdownSource"
     }
 
@@ -33,9 +36,13 @@ final class AppearanceSettings {
     var lineSpacing: CGFloat {
         didSet { UserDefaults.standard.set(Double(lineSpacing), forKey: Key.lineSpacing) }
     }
-    /// Part of the screen width the text column uses. Below 1 the column is centered.
-    var widthFraction: CGFloat {
-        didSet { UserDefaults.standard.set(Double(widthFraction), forKey: Key.widthFraction) }
+    /// Longest line in characters (widths of "0") when `limitsLineWidth` is on. The column is centered.
+    var lineWidth: Int {
+        didSet { UserDefaults.standard.set(lineWidth, forKey: Key.lineWidth) }
+    }
+    /// Off: the text uses the full width of the window.
+    var limitsLineWidth: Bool {
+        didSet { UserDefaults.standard.set(limitsLineWidth, forKey: Key.limitsLineWidth) }
     }
     /// View > Show Markdown Source: all syntax visible, one font size, light highlighting.
     /// Not part of `reset()`: it is a view mode, not a look.
@@ -54,8 +61,10 @@ final class AppearanceSettings {
             ?? Self.defaultFontSize
         lineSpacing = (defaults.object(forKey: Key.lineSpacing) as? Double).map { CGFloat($0) }
             ?? Self.defaultLineSpacing
-        widthFraction = (defaults.object(forKey: Key.widthFraction) as? Double).map { CGFloat($0) }
-            ?? Self.defaultWidthFraction
+        lineWidth = (defaults.object(forKey: Key.lineWidth) as? Int)
+            .map { min(max($0, Self.lineWidthRange.lowerBound), Self.lineWidthRange.upperBound) }
+            ?? Self.defaultLineWidth
+        limitsLineWidth = defaults.object(forKey: Key.limitsLineWidth) as? Bool ?? true
         showsMarkdownSource = defaults.bool(forKey: Key.showsMarkdownSource)
     }
 
@@ -79,14 +88,15 @@ final class AppearanceSettings {
         fontFamily = Self.systemFamily
         fontSize = Self.defaultFontSize
         lineSpacing = Self.defaultLineSpacing
-        widthFraction = Self.defaultWidthFraction
+        lineWidth = Self.defaultLineWidth
+        limitsLineWidth = true
     }
 
-    /// Horizontal text inset for an editor `width` points wide on a screen `screenWidth` points wide.
-    /// Never less than `minimum`.
-    func horizontalInset(forWidth width: CGFloat, screenWidth: CGFloat, minimum: CGFloat) -> CGFloat {
-        guard widthFraction < 1 else { return minimum }
-        return max(minimum, ((width - screenWidth * widthFraction) / 2).rounded())
+    /// Horizontal text inset that centers a column of `columnWidth` points (nil: full width) in an
+    /// editor `width` points wide. Never less than `minimum`.
+    nonisolated static func horizontalInset(forWidth width: CGFloat, columnWidth: CGFloat?, minimum: CGFloat) -> CGFloat {
+        guard let columnWidth else { return minimum }
+        return max(minimum, ((width - columnWidth) / 2).rounded())
     }
 }
 
@@ -121,12 +131,18 @@ struct AppearanceSettingsView: View {
                         .frame(width: 40, alignment: .trailing)
                 }
             }
-            LabeledContent("Width of screen:") {
-                HStack {
-                    Slider(value: $settings.widthFraction, in: 0.3...1, step: 0.05)
-                    Text("\(Int((settings.widthFraction * 100).rounded())) %")
-                        .monospacedDigit()
-                        .frame(width: 40, alignment: .trailing)
+            LabeledContent("Line width:") {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Slider(value: Binding(get: { Double(settings.lineWidth) }, set: { settings.lineWidth = Int($0) }),
+                               in: Double(AppearanceSettings.lineWidthRange.lowerBound)...Double(AppearanceSettings.lineWidthRange.upperBound),
+                               step: 4)
+                        Text("\(settings.lineWidth) characters")
+                            .monospacedDigit()
+                            .frame(width: 96, alignment: .trailing)
+                    }
+                    .disabled(!settings.limitsLineWidth)
+                    Toggle("Limit the line width", isOn: $settings.limitsLineWidth)
                 }
             }
             HStack {

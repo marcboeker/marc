@@ -105,12 +105,23 @@ public struct MarkdownEditorTheme: Sendable {
 
     // MARK: Tables
 
-    /// Outline around a rendered table.
+    /// Rules between a rendered table's rows.
     public var tableBorder: NSColor
-    /// Fill behind the header row.
-    public var tableHeaderBackground: NSColor
-    /// Fill behind every second body row.
-    public var tableStripeBackground: NSColor
+
+    // Marc: new keys. nil keeps the look from before them.
+
+    // MARK: Rules and markers
+
+    /// Line under a table's header row. nil: `tableBorder`.
+    public var tableHeaderRule: NSColor?
+    /// Thematic-break rule. nil: `strikethroughColor` at 40 %.
+    public var rule: NSColor?
+    /// Drawn `•` bullets and ordered-list numbers. nil: `bodyText`.
+    public var listMarker: NSColor?
+    /// Link underline. nil: the link color.
+    public var linkUnderline: NSColor?
+    /// Text of a checked task item. nil: unchanged.
+    public var taskDoneText: NSColor?
 
     // MARK: Init
 
@@ -136,8 +147,11 @@ public struct MarkdownEditorTheme: Sendable {
         blockquoteBackground: NSColor? = nil,
         blockquoteText: NSColor = .secondaryLabelColor,
         tableBorder: NSColor = .overlay(dark: 0.12, light: 0.10),
-        tableHeaderBackground: NSColor = .overlay(dark: 0.09, light: 0.06),
-        tableStripeBackground: NSColor = .overlay(dark: 0.055, light: 0.035)
+        tableHeaderRule: NSColor? = nil,
+        rule: NSColor? = nil,
+        listMarker: NSColor? = nil,
+        linkUnderline: NSColor? = nil,
+        taskDoneText: NSColor? = nil
     ) {
         self.bodyText = bodyText
         self.mutedText = mutedText
@@ -160,8 +174,11 @@ public struct MarkdownEditorTheme: Sendable {
         self.blockquoteBackground = blockquoteBackground
         self.blockquoteText = blockquoteText
         self.tableBorder = tableBorder
-        self.tableHeaderBackground = tableHeaderBackground
-        self.tableStripeBackground = tableStripeBackground
+        self.tableHeaderRule = tableHeaderRule
+        self.rule = rule
+        self.listMarker = listMarker
+        self.linkUnderline = linkUnderline
+        self.taskDoneText = taskDoneText
     }
 
     /// System-native palette built from `NSColor` dynamic system colors.

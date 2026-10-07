@@ -25,12 +25,12 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     @ObservationIgnored private var pending: [(body: String, arguments: [String: Any], then: Completion?)] = []
 
     /// What the page shows now.
-    @ObservationIgnored private var shown: (text: String, folder: URL?, style: PreviewStyle?) = ("", nil, nil)
+    @ObservationIgnored private var shown: (text: String, folder: URL?, style: DocumentStyle?) = ("", nil, nil)
     @ObservationIgnored private var sourceMap = PreviewSourceMap(html: "")
     /// The blocks the page has after the scripts sent so far, and whether it knows how they split.
     @ObservationIgnored private var sentBody = PreviewBody.empty
     @ObservationIgnored private var pageKnowsBlocks = false
-    @ObservationIgnored private var style: PreviewStyle?
+    @ObservationIgnored private var style: DocumentStyle?
     @ObservationIgnored private var renderTask: Task<Void, Never>?
     @ObservationIgnored private var lastScroll: PreviewSourceMap.Target?
     @ObservationIgnored private var scrollObserver: NSObjectProtocol?
@@ -132,7 +132,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     /// Called by the preview view on every SwiftUI update with the file's text and folder: an edit
     /// renders after `debounce`, a new file, folder or style renders now. The render itself takes the
     /// editor's text, which `text` trails by one run-loop turn.
-    func refresh(text: String, folder: URL?, style: PreviewStyle) {
+    func refresh(text: String, folder: URL?, style: DocumentStyle) {
         self.style = style
         if folder != shown.folder || style != shown.style || loadState == .idle {
             render()
@@ -154,7 +154,7 @@ final class PreviewController: NSObject, WKNavigationDelegate, WKUIDelegate {
     func render() {
         renderTask?.cancel()
         guard let editor else { return }
-        let style = style ?? PreviewStyle(screenWidth: editor.textView?.window?.screen?.frame.width ?? 0)
+        let style = style ?? DocumentStyle(settings: .shared)
         let text = editor.currentText
         let folder = editor.documentFolder
         let rendering = PreviewRenderer.render(markdown: text)

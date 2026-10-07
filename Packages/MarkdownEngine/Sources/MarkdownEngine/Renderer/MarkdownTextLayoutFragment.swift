@@ -81,11 +81,9 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
     /// shared so the styler's text indent and the painted bars line up.
     /// Level N's bar sits where level N-1's text starts.
     static let blockquoteIndentPerLevel: CGFloat = 20 // Marc: upstream 18
-    static let blockquoteBarWidth: CGFloat = 3
+    static let blockquoteBarWidth: CGFloat = 2 // Marc: upstream 3
     // Marc: new constants for quote panels and inline code pills.
-    /// Right inset of each nested blockquote panel inside its parent.
-    static let blockquoteNestedInset: CGFloat = 8
-    static let panelCornerRadius: CGFloat = 6
+    static let panelCornerRadius: CGFloat = 8 // Marc: also code blocks
     /// Horizontal room (points) the styler kerns in on each side of hidden
     /// inline-code content; the pill fills it.
     static let inlineCodePillPadding: CGFloat = 4
@@ -317,14 +315,20 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
             height: snappedMaxY - snappedY
         )
 
+        // Marc: the block's first and last line round their outer corners.
+        let opens = range.location == 0
+            || ts.attribute(.codeBlockBackground, at: range.location - 1, effectiveRange: nil) == nil
+        let closes = NSMaxRange(range) >= ts.length
+            || ts.attribute(.codeBlockBackground, at: NSMaxRange(range), effectiveRange: nil) == nil
+        let slab = roundedPath(bgRect, top: opens, bottom: closes)
+
         let selectionRects = selectionRectsInDrawCoordinates(drawPoint: point, snappedY: snappedY, snappedMaxY: snappedMaxY)
         color.setFill()
         if selectionRects.isEmpty {
-            NSBezierPath(rect: bgRect).fill()
+            slab.fill()
         } else {
-            let path = NSBezierPath()
+            let path = slab.copy() as! NSBezierPath
             path.windingRule = .evenOdd
-            path.appendRect(bgRect)
             for r in selectionRects {
                 path.appendRect(r.intersection(bgRect))
             }
@@ -729,7 +733,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         let nsContext = NSGraphicsContext(cgContext: context, flipped: true)
         NSGraphicsContext.current = nsContext
 
-        let ruleColor = theme.strikethroughColor.withAlphaComponent(0.4)
+        let ruleColor = theme.rule ?? theme.strikethroughColor.withAlphaComponent(0.4) // Marc: theme.rule
         for decoration in decorations {
             guard let mark = decoration.mark else {
                 ruleColor.setFill()
@@ -770,6 +774,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         let config = configuration
         let padding = config.theme.blockquoteBackground == nil ? 0 : config.blockquote.panelPadding
         let containerWidth = textLayoutManager?.textContainer?.size.width ?? layoutFragmentFrame.width
+        let outset = config.codeBlock.backgroundOutset
         let leftEdge = point.x - layoutFragmentFrame.origin.x
         let indentPerLevel = Self.blockquoteIndentPerLevel
         // TextKit 2 appends a synthetic trailing empty line fragment whose
@@ -793,8 +798,11 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
                 let pad = i == 0 ? padding : 0
                 let top = point.y + tb.origin.y - (opens ? pad : 0)
                 let bottom = point.y + tb.origin.y + tb.height + (closes ? pad : 0)
-                let x = leftEdge + CGFloat(i) * indentPerLevel
-                let right = leftEdge + containerWidth - CGFloat(i) * Self.blockquoteNestedInset
+                // Marc: like a code block's fill, level 0 reaches `backgroundOutset` past the
+                // text column on both sides, so its text stays on the text edge; level i sits
+                // where level i's text (one indent less) starts.
+                let x = i == 0 ? leftEdge - outset : leftEdge + CGFloat(i - 1) * indentPerLevel
+                let right = leftEdge + containerWidth + outset
                 panels.append(QuotePanel(
                     rect: CGRect(x: x, y: top, width: right - x, height: bottom - top),
                     bar: CGRect(x: x, y: top, width: Self.blockquoteBarWidth, height: bottom - top),
@@ -815,40 +823,51 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
         defer { NSGraphicsContext.restoreGraphicsState() }
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
 
+        // Marc: only the outermost level has a panel (fully rounded, its bar clipped inside);
+        // nested levels are bars. Upstream layered a panel per level.
+        let isOuter = { (panel: QuotePanel) in panel.rect.minX < point.x - self.layoutFragmentFrame.origin.x }
         if let fill = theme.blockquoteBackground {
             fill.setFill()
-            for panel in panels {
-                panelPath(panel.rect, roundTop: panel.roundTop, roundBottom: panel.roundBottom).fill()
+            for panel in panels where isOuter(panel) {
+                roundedPath(panel.rect, top: panel.roundTop, bottom: panel.roundBottom).fill()
             }
         }
         theme.blockquoteBar.setFill()
         for panel in panels {
-            NSBezierPath(rect: panel.bar).fill()
+            if isOuter(panel) {
+                NSGraphicsContext.saveGraphicsState()
+                roundedPath(panel.rect, top: panel.roundTop, bottom: panel.roundBottom).addClip()
+                NSBezierPath(rect: panel.bar).fill()
+                NSGraphicsContext.restoreGraphicsState()
+            } else {
+                NSBezierPath(rect: panel.bar).fill()
+            }
         }
     }
 
-    /// `rect` with square left corners (the bar covers them) and the right
-    /// corners rounded where the panel opens or closes.
-    private func panelPath(_ rect: CGRect, roundTop: Bool, roundBottom: Bool) -> NSBezierPath {
+    // Marc: new.
+    /// `rect` with all four corners rounded on the sides where it opens (`top`) or closes (`bottom`).
+    private func roundedPath(_ rect: CGRect, top: Bool, bottom: Bool) -> NSBezierPath {
         let r = min(Self.panelCornerRadius, rect.height / 2, rect.width / 2)
-        let path = NSBezierPath()
+        guard top || bottom else { return NSBezierPath(rect: rect) }
+        if top && bottom { return NSBezierPath(roundedRect: rect, xRadius: r, yRadius: r) }
         // Flipped context: minY is the top edge.
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        if roundTop {
+        let path = NSBezierPath()
+        if top {
+            path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.line(to: CGPoint(x: rect.minX, y: rect.minY + r))
+            path.appendArc(withCenter: CGPoint(x: rect.minX + r, y: rect.minY + r), radius: r, startAngle: 180, endAngle: 270)
             path.line(to: CGPoint(x: rect.maxX - r, y: rect.minY))
-            path.appendArc(withCenter: CGPoint(x: rect.maxX - r, y: rect.minY + r), radius: r,
-                           startAngle: 270, endAngle: 0, clockwise: false)
-        } else {
-            path.line(to: CGPoint(x: rect.maxX, y: rect.minY))
-        }
-        if roundBottom {
-            path.line(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
-            path.appendArc(withCenter: CGPoint(x: rect.maxX - r, y: rect.maxY - r), radius: r,
-                           startAngle: 0, endAngle: 90, clockwise: false)
-        } else {
+            path.appendArc(withCenter: CGPoint(x: rect.maxX - r, y: rect.minY + r), radius: r, startAngle: 270, endAngle: 0)
             path.line(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        } else {
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.line(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.line(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
+            path.appendArc(withCenter: CGPoint(x: rect.maxX - r, y: rect.maxY - r), radius: r, startAngle: 0, endAngle: 90)
+            path.line(to: CGPoint(x: rect.minX + r, y: rect.maxY))
+            path.appendArc(withCenter: CGPoint(x: rect.minX + r, y: rect.maxY - r), radius: r, startAngle: 90, endAngle: 180)
         }
-        path.line(to: CGPoint(x: rect.minX, y: rect.maxY))
         path.close()
         return path
     }
@@ -892,7 +911,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
             let isSelected = selectionRanges.contains(where: { NSIntersectionRange($0, attrRange).length > 0 })
             let raw = storageString.substring(with: attrRange)
             let glyph = (isSelected ? raw : "•") as NSString
-            let glyphAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: theme.bodyText]
+            let glyphAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: theme.listMarker ?? theme.bodyText]
 
             let markerWidth = (raw as NSString).size(withAttributes: [.font: font]).width
             let glyphWidth = glyph.size(withAttributes: glyphAttrs).width
@@ -933,7 +952,7 @@ final class MarkdownTextLayoutFragment: NSTextLayoutFragment {
                 ?? textView?.font
                 ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
             let glyph = number as NSString
-            let glyphAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: theme.bodyText]
+            let glyphAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: theme.listMarker ?? theme.bodyText]
             let topY = pos.baselineY - font.ascender
             glyph.draw(at: CGPoint(x: pos.x, y: topY), withAttributes: glyphAttrs)
         }

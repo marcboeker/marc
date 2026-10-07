@@ -9,8 +9,6 @@ struct ContentView: View {
     /// appears (also when the window opens with several files or pins). It never closes by itself, so a ⌃⌘S hide
     /// holds until that turns false and true again.
     @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
-    /// Width of the window's screen. The width limit is a part of it.
-    @State private var screenWidth = NSScreen.main?.frame.width ?? 0
     /// The editor's part of the split. Not saved: each Side by Side starts at 50/50.
     @State private var splitFraction: CGFloat = 0.5
     @State private var detailWidth: CGFloat = 0
@@ -59,12 +57,6 @@ struct ContentView: View {
         .onChange(of: files.selected?.url, initial: true) {   // a switch, Save As, Move To
             files.window?.representedURL = files.selected?.url
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification)) { note in
-            if note.object as? NSWindow === controller.textView?.window { updateScreenWidth() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
-            updateScreenWidth()
-        }
     }
 
     /// The editor, and in a preview mode the rendered page over it or beside it. The editor stays in
@@ -89,7 +81,7 @@ struct ContentView: View {
                         preview: controller.preview,
                         text: file.text,
                         folder: file.url?.deletingLastPathComponent(),
-                        style: PreviewStyle(settings: appearance, screenWidth: screenWidth)
+                        style: DocumentStyle(settings: appearance)
                     )
                     .frame(width: layout.previewWidth, height: geometry.size.height)
                     .offset(x: layout.previewX)
@@ -134,10 +126,7 @@ struct ContentView: View {
             retainedScrollDocumentIds: Set(files.files.map(\.id.uuidString)),   // closed files drop their undo
             // The text view's mouse tracking fires under the overlay too: no I-beam over the preview.
             isCursorExcluded: { _ in controller.editorIsHidden },
-            onTextViewReady: {
-                controller.attach($0)
-                updateScreenWidth()
-            },
+            onTextViewReady: { controller.attach($0) },
             onWillPaste: { controller.dropPaste.willPaste(in: $0, pasteboard: $1) },
             onDropFiles: { controller.dropPaste.drop(in: $0, info: $1, insertionIndex: $2) },
             onSaveRequest: { _ in controller.saveRequested() },
@@ -178,29 +167,20 @@ struct ContentView: View {
         controller.lint.clear()
     }
 
-    private func updateScreenWidth() {
-        if let screen = controller.textView?.window?.screen ?? NSScreen.main {
-            screenWidth = screen.frame.width
-        }
-    }
-
     /// `width` is the editor width; `folder` resolves relative images; with a width limit the horizontal inset centers the text.
     private func configuration(width: CGFloat, folder: URL?) -> MarkdownEditorConfiguration {
         var config = MarkdownEditorConfiguration()
         config.services.images = FileImageProvider(baseURL: folder)
         config.extensions = [StrikethroughExtension()]
-        config.theme = .marc
+        let style = DocumentStyle(settings: appearance)
+        style.apply(to: &config)   // the same measures and colors as the Preview
         config.rawSourceMode = appearance.showsMarkdownSource
-        // Code lines up with the body text; the slab reaches into the inset instead.
-        config.codeBlock.horizontalIndent = 0
-        config.codeBlock.backgroundOutset = 12
         config.lists.autoClosePairsEnabled = false
         config.spellChecking.automaticQuoteSubstitution = false
         config.textInsets = TextInsets(
-            horizontal: appearance.horizontalInset(forWidth: width, screenWidth: screenWidth, minimum: 24),
+            horizontal: AppearanceSettings.horizontalInset(forWidth: width, columnWidth: style.columnWidth, minimum: 24),
             vertical: 16
         )
-        config.paragraph.lineHeightExtraSpacing = appearance.lineSpacing
         // A fixed ~2-line slack below the last line; the engine default (25% of the viewport) leaves half a window empty.
         config.overscroll = OverscrollPolicy(percent: 0, maxPoints: 48, minPoints: 48)
         return config

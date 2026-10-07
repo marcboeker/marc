@@ -358,6 +358,14 @@ extension NativeTextViewCoordinator {
             }
         }
 
+        // Marc: a line break added or removed can turn lines away from the edit into indented
+        // code or a setext heading, or back. Restyle the whole blocks the caret lines belong
+        // to (paragraphs only up to a size), and an indented code block right after them.
+        if listStructureChanged {
+            effectiveParagraphCandidates.append(contentsOf: Self.structureBlockRanges(
+                parsed.blocks, around: [previousParagraph, paragraphRange, nextParagraph]))
+        }
+
         PerfTrace.measure("restyle") { restyleTextView(tv, paragraphCandidates: effectiveParagraphCandidates, tokens: tokens, classified: parsed.classified, blocks: parsed.blocks) }
         PerfTrace.measure("codeSel") { updateCodeBlockSelection(textView: tv, parsed: parsed) }
         if wtActive {
@@ -781,6 +789,31 @@ extension NativeTextViewCoordinator {
         }
 
         return prefix(in: before) != prefix(in: after as String)
+    }
+
+    // Marc: new.
+    /// The blocks a line-break edit can restyle away from the edit (see textDidChange).
+    static func structureBlockRanges(_ blocks: [Block], around lines: [NSRange]) -> [NSRange] {
+        let lines = lines.filter { $0.location != NSNotFound }
+        guard let lo = lines.map(\.location).min(), let hi = lines.map({ NSMaxRange($0) }).max() else { return [] }
+        var first = 0, last = blocks.count
+        while first < last {                       // first block ending after `lo`
+            let m = (first + last) / 2
+            if NSMaxRange(blocks[m].range) > lo { last = m } else { first = m + 1 }
+        }
+        var ranges: [NSRange] = []
+        var j = first
+        while j < blocks.count, blocks[j].range.location < hi {
+            switch blocks[j].kind {
+            case .indentedCode, .heading: ranges.append(blocks[j].range)
+            case .paragraph where blocks[j].range.length <= 5_000: ranges.append(blocks[j].range)
+            default: break
+            }
+            j += 1
+        }
+        while j < blocks.count, blocks[j].kind == .blank { j += 1 }
+        if j < blocks.count, blocks[j].kind == .indentedCode { ranges.append(blocks[j].range) }
+        return ranges
     }
 
     /// Backtick census in O(edit window): the greedy ``` count equals

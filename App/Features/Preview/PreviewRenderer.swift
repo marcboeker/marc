@@ -1,23 +1,11 @@
 import Foundation
 
-/// The editor's look for the preview page: font, size, line spacing and text width.
-struct PreviewStyle: Equatable {
-    /// Family name, or nil for the system font.
-    var fontFamily: String?
-    var fontSize: CGFloat
-    /// Extra points per line, like the editor.
-    var lineSpacing: CGFloat
-    /// Widest text column in points, or nil for the full width. Like the editor: a part of the screen width.
-    var maxWidth: CGFloat?
-}
-
-extension PreviewStyle {
+extension DocumentStyle {
+    /// The editor's look for the preview page: font, size, line spacing and line width.
     @MainActor
-    init(settings: AppearanceSettings = .shared, screenWidth: CGFloat) {
-        fontFamily = settings.htmlFontFamily
-        fontSize = settings.fontSize
-        lineSpacing = settings.lineSpacing
-        maxWidth = settings.widthFraction < 1 && screenWidth > 0 ? (screenWidth * settings.widthFraction).rounded() : nil
+    init(settings: AppearanceSettings = .shared) {
+        self.init(fontFamily: settings.htmlFontFamily, fontSize: settings.fontSize,
+                  lineSpacing: settings.lineSpacing, lineWidth: settings.limitsLineWidth ? settings.lineWidth : nil)
     }
 }
 
@@ -41,7 +29,7 @@ enum PreviewRenderer {
     }
 
     /// The page loaded once. Later changes go through the script's `update`, without a reload.
-    static func page(body: String, baseFolder: URL?, style: PreviewStyle) -> String {
+    static func page(body: String, baseFolder: URL?, style: DocumentStyle) -> String {
         let base = baseFolder.map { "<base href=\"\(MarkdownHTML.escape(PreviewScheme.base($0)))\">\n" } ?? ""
         return """
         <!DOCTYPE html>
@@ -59,34 +47,17 @@ enum PreviewRenderer {
         """
     }
 
-    /// Colours follow `prefers-color-scheme`; the web view takes the app's appearance.
-    static func stylesheet(_ style: PreviewStyle) -> String {
-        let width = style.maxWidth.map { "max-width: \(Int($0))px; " } ?? ""
-        return """
-        :root { font-family: \(MarkdownHTML.fontFamily(style.fontFamily)); font-size: \(Int(style.fontSize))px;
-                --extra-line: \(Int(style.lineSpacing))px; color-scheme: light dark;
-                --text: #1d1d1f; --secondary: #6e6e73; --rule: #d0d0d5; --fill: rgba(0, 0, 0, 0.045);
-                --link: #0060c0; --code: #c4470a; --code-fill: rgba(255, 106, 26, 0.09); }
+    /// Colours follow `prefers-color-scheme`; the web view takes the app's appearance. The page
+    /// padding is the editor's text inset.
+    static func stylesheet(_ style: DocumentStyle) -> String {
+        """
+        :root { color-scheme: light dark; \(DocumentPalette.cssVariables(dark: false)) --check: \(DocumentStyle.checkImage(dark: false)); }
         @media (prefers-color-scheme: dark) {
-            :root { --text: rgba(255, 255, 255, 0.86); --secondary: rgba(255, 255, 255, 0.55);
-                    --rule: #48484a; --fill: rgba(255, 255, 255, 0.06); --link: #5eb0ff;
-                    --code: #ff9a5c; --code-fill: rgba(255, 106, 26, 0.10); }
+            :root { \(DocumentPalette.cssVariables(dark: true)) --check: \(DocumentStyle.checkImage(dark: true)); }
         }
-        html { color: var(--text); background: transparent; }
+        html { background: transparent; }
         body { margin: 0; padding: 16px 24px 48px; }
-        main { \(width)margin: 0 auto; }
-        p, li, blockquote, td, th, dt, dd { line-height: calc(1.3em + var(--extra-line)); }
-        h1, h2, h3, h4, h5, h6 { line-height: calc(1.2em + var(--extra-line)); margin: 1.2em 0 0.5em; }
-        main > :first-child { margin-top: 0; }
-        \(MarkdownHTML.stylesheet)
-        a:hover { text-decoration: underline; }
-        code { color: var(--code); background: var(--code-fill); border-radius: 4px; padding: 0.05em 0.3em; }
-        pre { background: var(--fill); border-radius: 6px; padding: 0.7em 0.9em; overflow-x: auto;
-              line-height: calc(1.35em + var(--extra-line)); }
-        pre code { color: inherit; }
-        blockquote { background: var(--fill); border-left: 3px solid var(--rule); border-radius: 0 6px 6px 0;
-                     padding: 0.4em 0.9em; margin-left: 0; }
-        blockquote > :last-child { margin-bottom: 0; }
+        \(style.css(unit: "px"))
         """
     }
 

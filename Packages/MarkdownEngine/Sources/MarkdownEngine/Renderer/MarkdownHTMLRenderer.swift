@@ -219,14 +219,22 @@ public enum MarkdownHTMLRenderer {
     }
 
     /// Fenced code: drop the opening ```lang / closing ``` fence lines, escape body.
+    /// Marc: also ~~~ fences, and indented code (no fences; the 4-column indent goes).
     private static func renderCodeBlock(range: NSRange, ns: NSString) -> String {
         let raw = ns.substring(with: range)
         var lines = raw.components(separatedBy: "\n")
         if lines.last == "" { lines.removeLast() }   // drop trailing-newline artifact
 
+        guard let fence = BlockParser.fenceOpening(lines.first ?? "") else {
+            let body = lines.map { line -> String in
+                if line.hasPrefix("\t") { return String(line.dropFirst()) }
+                return String(line.dropFirst(min(4, line.prefix { $0 == " " }.count)))
+            }
+            return "<pre><code>\(escape(body.joined(separator: "\n")))</code></pre>"
+        }
         let language = fenceLanguage(lines.first ?? "")
         var body = Array(lines.dropFirst())
-        if let last = body.last, isFenceLine(last) { body.removeLast() }
+        if let last = body.last, BlockParser.isFenceClose(last, fence) { body.removeLast() }
 
         let escaped = escape(body.joined(separator: "\n"))
         if let language, !language.isEmpty {
@@ -235,15 +243,9 @@ public enum MarkdownHTMLRenderer {
         return "<pre><code>\(escaped)</code></pre>"
     }
 
-    /// The parser only produces column-0 backtick fences (BlockParser.isFence),
-    /// so match that contract when stripping the closing fence line.
-    private static func isFenceLine(_ line: String) -> Bool {
-        line.hasPrefix("```")
-    }
-
-    /// Language info-string from an opening fence line (chars after the backticks).
+    /// Language info-string from an opening fence line (chars after the backticks or tildes).
     private static func fenceLanguage(_ line: String) -> String? {
-        let lang = line.drop { $0 == "`" }.trimmingCharacters(in: .whitespaces)
+        let lang = line.drop { $0 == "`" || $0 == "~" }.trimmingCharacters(in: .whitespaces)
         return lang.isEmpty ? nil : lang
     }
 

@@ -331,19 +331,30 @@ public struct ListStyle: Sendable {
     public var maximumNestingLevel: Int
     /// Extra line height added on top of the default to give list items room.
     public var extraLineHeight: CGFloat
+    // Marc: new.
+    /// Space (points) between the items of one list; the last item gets the paragraph
+    /// spacing. nil: the paragraph spacing after every item.
+    public var itemSpacing: CGFloat?
+    /// Where (points) a top-level item's marker starts. nil: `indentPerLevel`. Nesting and
+    /// tab stops still step by `indentPerLevel`.
+    public var markerIndent: CGFloat?
 
     public init(
         helpersEnabled: Bool = true,
         autoClosePairsEnabled: Bool = true,
         indentPerLevel: CGFloat = 27.5,
         maximumNestingLevel: Int = 3,
-        extraLineHeight: CGFloat = 2
+        extraLineHeight: CGFloat = 2,
+        itemSpacing: CGFloat? = nil,
+        markerIndent: CGFloat? = nil
     ) {
         self.helpersEnabled = helpersEnabled
         self.autoClosePairsEnabled = autoClosePairsEnabled
         self.indentPerLevel = indentPerLevel
         self.maximumNestingLevel = maximumNestingLevel
         self.extraLineHeight = extraLineHeight
+        self.itemSpacing = itemSpacing
+        self.markerIndent = markerIndent
     }
 
     public static let `default` = ListStyle()
@@ -477,13 +488,18 @@ public struct HeadingStyle: Sendable {
     public var fontMultipliers: [CGFloat]
     /// Top spacing in `em` units per heading level (1...6).
     public var topSpacingEm: [CGFloat]
+    // Marc: new.
+    /// Levels from this one down draw in `theme.mutedText`. 7: none.
+    public var mutedFromLevel: Int
 
     public init(
         fontMultipliers: [CGFloat] = [2.0, 1.5, 1.17, 1.0, 0.83, 0.67],
-        topSpacingEm: [CGFloat] = [0.35, 0.30, 0.25, 0.20, 0.15, 0.10]
+        topSpacingEm: [CGFloat] = [0.35, 0.30, 0.25, 0.20, 0.15, 0.10],
+        mutedFromLevel: Int = 7
     ) {
         self.fontMultipliers = fontMultipliers
         self.topSpacingEm = topSpacingEm
+        self.mutedFromLevel = mutedFromLevel
     }
 
     public func fontMultiplier(for level: Int) -> CGFloat {
@@ -617,10 +633,15 @@ public struct ParagraphStyle: Sendable {
     public var spacingFactor: CGFloat
     /// Extra height (points) added to the default paragraph line height.
     public var lineHeightExtraSpacing: CGFloat
+    // Marc: new.
+    /// Height (points) of an empty source line between blocks. nil: a full line. With it, the
+    /// blank lines make the gaps between blocks, and `spacingFactor` can be 0.
+    public var blankLineHeight: CGFloat?
 
-    public init(spacingFactor: CGFloat = 0.3, lineHeightExtraSpacing: CGFloat = 2) {
+    public init(spacingFactor: CGFloat = 0.3, lineHeightExtraSpacing: CGFloat = 2, blankLineHeight: CGFloat? = nil) {
         self.spacingFactor = spacingFactor
         self.lineHeightExtraSpacing = lineHeightExtraSpacing
+        self.blankLineHeight = blankLineHeight
     }
 
     public static let `default` = ParagraphStyle()

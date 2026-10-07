@@ -169,7 +169,18 @@ enum DocumentAST {
         case .heading:
             return heading(block.range, ns, scoped: scoped, registry: registry)
         case .blockquote:
-            return .blockquote(range: block.range, inlines: scoped ? InlineParser.parse(ns, range: block.range, registry: registry) : [])
+            // Marc: fenced code inside the quote is not inline text.
+            guard scoped else { return .blockquote(range: block.range, inlines: []) }
+            var inlines: [InlineNode] = []
+            var cursor = block.range.location
+            for end in quoteCodeRuns(block.range, ns).map(\.range) + [NSRange(location: NSMaxRange(block.range), length: 0)] {
+                if end.location > cursor {
+                    inlines += InlineParser.parse(ns, range: NSRange(location: cursor, length: end.location - cursor),
+                                                  registry: registry)
+                }
+                cursor = NSMaxRange(end)
+            }
+            return .blockquote(range: block.range, inlines: inlines)
         case .list:
             return list(
                 block.range,
@@ -177,7 +188,7 @@ enum DocumentAST {
                 scopedRanges: scopedRanges,
                 registry: registry
             )
-        case .fencedCode:
+        case .fencedCode, .indentedCode:
             return .codeBlock(range: block.range)
         case .blockLatex:
             return .blockLatex(range: block.range)
@@ -231,8 +242,20 @@ enum DocumentAST {
     }
 
     /// ATX heading: optional indent, `#`×level, space(s), then inline content.
+    /// Marc: or a setext heading — text lines, then a `===`/`---` underline (the marker).
     private static func heading(_ range: NSRange, _ ns: NSString, scoped: Bool = true, registry: ExtensionRegistry = .empty) -> BlockNode {
         let end = NSMaxRange(range)
+        let lastLine = ns.lineRange(for: NSRange(location: max(range.location, end - 1), length: 0))
+        if lastLine.location > range.location, let level = BlockParser.setextLevel(ns.substring(with: lastLine)) {
+            var underlineEnd = NSMaxRange(lastLine)
+            while underlineEnd > lastLine.location, isLineBreak(ns.character(at: underlineEnd - 1)) { underlineEnd -= 1 }
+            var contentEnd = lastLine.location
+            while contentEnd > range.location, isLineBreak(ns.character(at: contentEnd - 1)) { contentEnd -= 1 }
+            let content = NSRange(location: range.location, length: contentEnd - range.location)
+            return .heading(level: level, range: range,
+                            markers: [NSRange(location: lastLine.location, length: underlineEnd - lastLine.location)],
+                            inlines: scoped ? InlineParser.parse(ns, range: content, registry: registry) : [])
+        }
         var i = range.location
         while i < end, ns.character(at: i) == space || ns.character(at: i) == tab { i += 1 }
         let hashStart = i
@@ -355,4 +378,58 @@ enum DocumentAST {
     }
 
     private static func isLineBreak(_ c: unichar) -> Bool { c == 0x0A || c == 0x0D }
+
+    // Marc: new.
+    /// A closed code fence inside a blockquote: its lines from the opening fence through the closing one.
+    struct QuoteCodeRun {
+        let range: NSRange
+        /// The fence lines after their `>` markers, without line breaks.
+        let openFence: NSRange
+        let closeFence: NSRange
+    }
+
+    /// The `>` markers (with their spaces) at the start of a quote line: the range they cover.
+    static func quoteMarkers(ofLine line: NSRange, _ ns: NSString) -> NSRange {
+        let end = NSMaxRange(line)
+        var i = line.location
+        var indent = 0
+        while i < end, indent < 3, ns.character(at: i) == space || ns.character(at: i) == tab { i += 1; indent += 1 }
+        let start = i
+        while i < end, ns.character(at: i) == 0x3E {
+            i += 1
+            if i < end, ns.character(at: i) == space || ns.character(at: i) == tab { i += 1 }
+        }
+        return i > start ? NSRange(location: start, length: i - start) : NSRange(location: line.location, length: 0)
+    }
+
+    /// Fenced code blocks inside a blockquote (unclosed fences stay text, as outside quotes).
+    static func quoteCodeRuns(_ range: NSRange, _ ns: NSString) -> [QuoteCodeRun] {
+        guard ns.range(of: "```", options: [], range: range).location != NSNotFound
+            || ns.range(of: "~~~", options: [], range: range).location != NSNotFound else { return [] }
+        var lines: [(line: NSRange, content: NSRange)] = []
+        var cursor = range.location
+        while cursor < NSMaxRange(range) {
+            let line = ns.lineRange(for: NSRange(location: cursor, length: 0))
+            let markers = quoteMarkers(ofLine: line, ns)
+            var contentEnd = NSMaxRange(line)
+            while contentEnd > NSMaxRange(markers), isLineBreak(ns.character(at: contentEnd - 1)) { contentEnd -= 1 }
+            lines.append((line, NSRange(location: NSMaxRange(markers), length: contentEnd - NSMaxRange(markers))))
+            cursor = NSMaxRange(line)
+        }
+        var runs: [QuoteCodeRun] = []
+        var i = 0
+        while i < lines.count {
+            let open = ns.substring(with: lines[i].content)
+            if let fence = BlockParser.fenceOpening(open),
+               let close = lines[(i + 1)...].firstIndex(where: { BlockParser.isFenceClose(ns.substring(with: $0.content), fence) }) {
+                runs.append(QuoteCodeRun(
+                    range: NSRange(location: lines[i].line.location, length: NSMaxRange(lines[close].line) - lines[i].line.location),
+                    openFence: lines[i].content, closeFence: lines[close].content))
+                i = close + 1
+            } else {
+                i += 1
+            }
+        }
+        return runs
+    }
 }

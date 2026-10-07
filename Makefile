@@ -2,6 +2,7 @@
 # Parallel agents can use private build output: make test DERIVED=.build/dd-lint
 DERIVED ?= .build/DerivedData
 PREFIX  ?= $(HOME)/.local
+APPDIR  ?= $(HOME)/Applications
 # A tagged commit is its tag (v1.0.0), otherwise the branch (main), a detached
 # HEAD its short hash, and a tree without git "dev". Override: make VERSION=x.
 VERSION ?= $(shell git describe --tags --exact-match --match 'v[0-9]*' 2>/dev/null \
@@ -40,11 +41,11 @@ run: quit build
 
 install: quit
 	$(XCODEBUILD) -configuration Release build
-	rm -rf /Applications/Marc.app
-	cp -R $(RELEASE_APP) /Applications/Marc.app
-	mkdir -p $(PREFIX)/bin
-	ln -sf /Applications/Marc.app/Contents/Resources/marc $(PREFIX)/bin/marc
-	@echo "Installed /Applications/Marc.app and $(PREFIX)/bin/marc"
+	rm -rf $(APPDIR)/Marc.app
+	mkdir -p $(APPDIR) $(PREFIX)/bin
+	cp -R $(RELEASE_APP) $(APPDIR)/Marc.app
+	ln -sf $(APPDIR)/Marc.app/Contents/Resources/marc $(PREFIX)/bin/marc
+	@echo "Installed $(APPDIR)/Marc.app and $(PREFIX)/bin/marc"
 
 # Full xcodebuild output is huge; keep results, failures and errors.
 test:

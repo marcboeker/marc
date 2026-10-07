@@ -40,7 +40,7 @@ struct PreviewBody: Equatable {
             var parts: [(html: String, isHTMLBlock: Bool)] = []
             var node = cmark_node_first_child(document)
             while let current = node {
-                parts.append((render(current), cmark_node_get_type(current) == CMARK_NODE_HTML_BLOCK))
+                parts.append((MarkdownHTML.labelLanguages(render(current)), cmark_node_get_type(current) == CMARK_NODE_HTML_BLOCK))
                 node = cmark_node_next(current)
             }
             return parts

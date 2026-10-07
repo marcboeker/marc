@@ -52,7 +52,8 @@ Changes by Marc (all marked with `// Marc:` or in files starting with a Marc com
    through the NativeTextViewContainer document view, so arrow keys did not scroll the document.
 11. MarkdownEditorTheme: new colors codeBlockBackground, codeBlockLanguage, inlineCodeBackground,
    inlineCodeText, blockquoteBar, blockquoteBackground, blockquoteText, tableBorder,
-   tableHeaderBackground, tableStripeBackground, and the helper NSColor.overlay(dark:light:).
+   tableHeaderRule, rule, listMarker, linkUnderline, taskDoneText, and the helper
+   NSColor.overlay(dark:light:).
    Upstream took the code fill from the syntax highlighter and drew quote bars, quote text and
    table lines in mutedText.
 12. Code blocks are marked with a new `.codeBlockBackground` attribute (theme color), and

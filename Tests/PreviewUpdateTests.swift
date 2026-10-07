@@ -6,7 +6,7 @@ import WebKit
 /// `marcPreview.update` in a real web view: an edit replaces only the blocks that changed.
 @MainActor
 struct PreviewUpdateTests {
-    private let style = PreviewStyle(fontFamily: nil, fontSize: 15, lineSpacing: 2, maxWidth: nil)
+    private let style = DocumentStyle(fontFamily: nil, fontSize: 15, lineSpacing: 2, lineWidth: nil)
 
     @Test func editReplacesOnlyTheChangedBlock() async throws {
         let page = try await Page(markdown: "# A\n\nfirst\n\n## B\n\nsecond\n\n## B\n", style: style)
@@ -140,13 +140,13 @@ struct PreviewUpdateTests {
     @MainActor
     private final class Page: NSObject, WKNavigationDelegate {
         let webView: WKWebView
-        let style: PreviewStyle
+        let style: DocumentStyle
         /// What the page shows, as the controller keeps it.
         private(set) var body: PreviewBody
         private var pageKnowsBlocks = false
         private var loaded: CheckedContinuation<Void, Never>?
 
-        init(markdown: String, style: PreviewStyle) async throws {
+        init(markdown: String, style: DocumentStyle) async throws {
             let configuration = WKWebViewConfiguration()
             configuration.defaultWebpagePreferences.allowsContentJavaScript = false
             configuration.userContentController.addUserScript(WKUserScript(

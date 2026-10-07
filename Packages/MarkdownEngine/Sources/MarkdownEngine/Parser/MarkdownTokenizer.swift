@@ -19,15 +19,15 @@ enum MarkdownTokenizer {
 
     static func extractLanguage(from token: MarkdownToken, in text: String) -> String? {
         guard token.kind == .codeBlock,
-              let openingMarker = token.markerRanges.first,
-              openingMarker.length > 4 else { return nil }
+              let openingMarker = token.markerRanges.first else { return nil }
 
         let nsText = text as NSString
-        let langRange = NSRange(location: openingMarker.location + 3, length: openingMarker.length - 4)
+        guard NSMaxRange(openingMarker) <= nsText.length else { return nil }
 
-        guard langRange.location + langRange.length <= nsText.length else { return nil }
-
-        let langString = nsText.substring(with: langRange).trimmingCharacters(in: .whitespacesAndNewlines)
+        // Marc: after the whole fence run (``` or ~~~, any length); upstream skipped 3 characters.
+        let langString = nsText.substring(with: openingMarker)
+            .drop { $0 == "`" || $0 == "~" }
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         return langString.isEmpty ? nil : langString
     }
 }

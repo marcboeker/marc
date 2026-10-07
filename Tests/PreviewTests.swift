@@ -3,7 +3,7 @@ import Testing
 @testable import Marc
 
 struct PreviewTests {
-    private let style = PreviewStyle(fontFamily: "Iowan Old Style", fontSize: 17, lineSpacing: 4, maxWidth: 700)
+    private let style = DocumentStyle(fontFamily: "Iowan Old Style", fontSize: 17, lineSpacing: 4, lineWidth: 60)
 
     // MARK: Rendering
 
@@ -25,18 +25,20 @@ struct PreviewTests {
         let print = PrintRenderer.page(markdown: "x", title: "t", baseFolder: nil, fontFamily: nil)
         #expect(!print.contains("prefers-color-scheme"))
         #expect(!print.contains("data-sourcepos"))
-        #expect(print.contains("html { color: #1d1d1f; background: white;"))
+        #expect(print.contains("html { background: white;"))
+        #expect(print.contains("--text: rgba(29, 29, 31, 1);"))
+        #expect(print.contains("font-size: 11pt;"))
     }
 
     @Test func previewUsesEditorAppearance() {
         let css = PreviewRenderer.stylesheet(style)
         #expect(css.contains("font-family: \"Iowan Old Style\", -apple-system"))
         #expect(css.contains("font-size: 17px"))
-        #expect(css.contains("--extra-line: 4px"))
-        #expect(css.contains("main { max-width: 700px; margin: 0 auto; }"))
-        let full = PreviewRenderer.stylesheet(PreviewStyle(fontFamily: nil, fontSize: 15, lineSpacing: 2, maxWidth: nil))
+        #expect(css.contains("line-height: \(Int(style.lineHeight))px"))
+        #expect(css.contains("main { max-width: \(Int(style.columnWidth!))px; margin: 0 auto;"))
+        let full = PreviewRenderer.stylesheet(DocumentStyle(fontFamily: nil, fontSize: 15, lineSpacing: 2, lineWidth: nil))
         #expect(full.contains("font-family: -apple-system"))
-        #expect(full.contains("main { margin: 0 auto; }"))
+        #expect(full.contains("main { margin: 0 auto;"))
     }
 
     @Test func pageSetsBaseFolder() {

@@ -42,6 +42,7 @@ struct Sidebar: View {
                     Spacer()
                     Text("\(rows.open.count)")
                         .monospacedDigit()
+                        .padding(.trailing, 10)
                 }
             }
             if let file = files.selected {

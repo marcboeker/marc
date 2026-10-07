@@ -16,7 +16,10 @@
 //  styler perform, so block ranges line up with today's tokens:
 //    • heading        — headingRegex        `^\s*#{1,6} +…`
 //    • thematic break — styler HR pattern   `^\s*(-{3,}|\*{3,}|_{3,})\s*$`
-//    • fenced code    — codeBlockRegex       opening/closing ``` line
+//    • fenced code    — column-0 ``` or ~~~ fence (3+), closed by a run of the
+//                       same character at least as long (Marc: tildes, close rule)
+//    • indented code  — 4-space/tab lines after a blank line, outside a list (Marc)
+//    • setext heading — paragraph lines underlined by `===` / `---` (Marc)
 //    • blockquote     — blockquoteRegex     `^[ \t]{0,3}(>…)`
 //
 
@@ -25,10 +28,11 @@ import Foundation
 /// The block-level classification of a run of lines.
 enum BlockKind: Equatable {
     case paragraph       // inline-bearing
-    case heading         // single ATX line (`# …`), inline-bearing content
+    case heading         // single ATX line (`# …`) or setext lines + underline, inline-bearing content
     case blockquote      // consecutive `>` lines, inline-bearing per line
     case list            // consecutive list-item lines (`-`/`*`/`+` or `1.`/`1)`)
-    case fencedCode      // ```…``` — opaque (no inline parsing inside)
+    case fencedCode      // ```…``` or ~~~…~~~ — opaque (no inline parsing inside)
+    case indentedCode    // Marc: 4-space indented code — opaque, no fence lines
     case blockLatex      // $$…$$ — opaque
     case table           // GFM table — opaque (rendered as a unit)
     case thematicBreak   // `---` / `***` / `___` — produces no token today
@@ -151,8 +155,9 @@ enum BlockParser {
         while i < end {
             if buf[i] == 0x24 {                                          // $
                 if i + 1 < end, buf[i + 1] == 0x24 { return true }       // $$
-            } else if buf[i] == 0x60, i + 2 < end, buf[i + 1] == 0x60, buf[i + 2] == 0x60 {
-                return true                                              // ```
+            } else if buf[i] == 0x60 || buf[i] == 0x7E, i + 2 < end,
+                      buf[i + 1] == buf[i], buf[i + 2] == buf[i] {
+                return true                                              // ``` or ~~~
             }
             // Extension fences pair with a distant partner exactly like ``` —
             // an edit touching one must force the full reparse too.
@@ -222,11 +227,19 @@ enum BlockParser {
 
         // 5. Reparse just the window substring, shift to absolute new coords.
         let windowText = newNS.substring(with: NSRange(location: winStart, length: winEndNew - winStart))
-        let reparsed = computeBlocks(windowText, registry: registry).map { $0.shifted(by: winStart) }
+        let reparsed = computeBlocks(windowText, registry: registry,
+                                     listContext: listContext(before: winFirst, blocks: oldBlocks, chars: o))
+            .map { $0.shifted(by: winStart) }
+        // Marc: an indented block after the window reads the list context the window ends with
+        // (indented code vs. list continuation), and the splice cannot recompute it.
+        if let next = oldBlocks[(winLast + 1)...].first(where: { $0.kind != .blank }),
+           next.kind == .indentedCode || (next.kind == .paragraph && isIndent(o[next.range.location])) {
+            return nil
+        }
         // A trailing fence/latex/extension block reaching the window end might continue past it.
         if let last = reparsed.last, NSMaxRange(last.range) >= winEndNew {
             switch last.kind {
-            case .fencedCode, .blockLatex, .ext: return nil
+            case .fencedCode, .indentedCode, .blockLatex, .ext: return nil
             case .paragraph:
                 // The edit may have dissolved the separator that used to end
                 // this paragraph (backspace-joining two paragraphs): if the
@@ -258,7 +271,29 @@ enum BlockParser {
         return (result, reparsed.count)
     }
 
-    static func computeBlocks(_ text: String, registry: ExtensionRegistry = .empty) -> [Block] {
+    // Marc: new.
+    /// Whether the block at `index` starts inside a list: the nearest block above it (past blank
+    /// lines and indented continuation paragraphs) is a list. Indented lines there continue the
+    /// list; anywhere else they are code.
+    private static func listContext(before index: Int, blocks: [Block], chars: [unichar]) -> Bool {
+        var j = index - 1
+        while j >= 0 {
+            let block = blocks[j]
+            switch block.kind {
+            case .list: return true
+            case .blank: break
+            case .paragraph where isIndent(chars[block.range.location]): break
+            default: return false
+            }
+            j -= 1
+        }
+        return false
+    }
+
+    private static func isIndent(_ c: unichar) -> Bool { c == 0x20 || c == 0x09 }
+
+    /// `listContext`: the text starts inside a list (see `listContext(before:blocks:chars:)`).
+    static func computeBlocks(_ text: String, registry: ExtensionRegistry = .empty, listContext: Bool = false) -> [Block] {
         let nsText = text as NSString
         let length = nsText.length
         guard length > 0 else { return [] }
@@ -274,11 +309,12 @@ enum BlockParser {
 
         func lineText(_ i: Int) -> String { nsText.substring(with: lines[i]) }
 
-        /// Line index of the fence closing a code block opened at `start`; nil when unclosed.
+        /// Line index of the fence closing a code block opened at `start`; nil when unclosed or no fence.
         func fenceCloseIndex(from start: Int) -> Int? {
+            guard let fence = fenceOpening(lineText(start)) else { return nil }
             var scan = start + 1
             while scan < lines.count {
-                if isFence(lineText(scan)) { return scan }
+                if isFenceClose(lineText(scan), fence) { return scan }
                 scan += 1
             }
             return nil
@@ -295,9 +331,21 @@ enum BlockParser {
 
         // 2. Classify + group.
         var blocks: [Block] = []
+        var inList = listContext
         var i = 0
         while i < lines.count {
             let line = lineText(i)
+            // Marc: the list context for the NEXT block, from the one this pass appends.
+            defer {
+                if let last = blocks.last {
+                    switch last.kind {
+                    case .list: inList = true
+                    case .blank: break
+                    case .paragraph: inList = inList && isIndent((line as NSString).character(at: 0))
+                    default: inList = false
+                    }
+                }
+            }
 
             if isBlank(line) {
                 var end = i
@@ -305,7 +353,21 @@ enum BlockParser {
                 blocks.append(Block(kind: .blank, range: union(lines[i...end])))
                 i = end + 1
 
-            } else if isFence(line), let end = fenceCloseIndex(from: i) {
+            } else if !inList, isIndentedCode(line), blocks.last.map({ $0.kind == .blank }) ?? true {
+                // Marc: indented code. It cannot interrupt a paragraph (a blank line or the start
+                // comes first) and inside a list the indent continues an item instead. Blank lines
+                // between code lines belong to the block; trailing ones do not.
+                var end = i
+                var scan = i + 1
+                while scan < lines.count {
+                    let next = lineText(scan)
+                    if isIndentedCode(next) { end = scan } else if !isBlank(next) { break }
+                    scan += 1
+                }
+                blocks.append(Block(kind: .indentedCode, range: union(lines[i...end])))
+                i = end + 1
+
+            } else if fenceOpening(line) != nil, let end = fenceCloseIndex(from: i) {
                 blocks.append(Block(kind: .fencedCode, range: union(lines[i...end])))
                 i = end + 1
 
@@ -359,20 +421,23 @@ enum BlockParser {
             } else {
                 // Paragraph: merge consecutive plain (non-blank, non-special) lines.
                 var end = i
+                var setext = false
                 while end + 1 < lines.count {
                     let next = lineText(end + 1)
+                    // Marc: a `===`/`---` underline turns the paragraph into a setext heading.
+                    if setextLevel(next) != nil { end += 1; setext = true; break }
                     if isBlank(next) || isThematicBreak(next)
                         || isHeading(next) || isBlockquote(next) || isListItem(next) { break }
                     // A table (row + separator), a CLOSED code fence, a
                     // block-LaTeX run, or an extension fence interrupts it —
                     // an unclosed opener stays part of the paragraph.
-                    if isFence(next), fenceCloseIndex(from: end + 1) != nil { break }
+                    if fenceOpening(next) != nil, fenceCloseIndex(from: end + 1) != nil { break }
                     if isTableRow(next), end + 2 < lines.count, isTableSeparator(lineText(end + 2)) { break }
                     if isBlockLatexOpen(next), blockLatexCloseIndex(from: end + 1) != nil { break }
                     if registry.blockEntry(opening: next) != nil { break }
                     end += 1
                 }
-                blocks.append(Block(kind: .paragraph, range: union(lines[i...end])))
+                blocks.append(Block(kind: setext ? .heading : .paragraph, range: union(lines[i...end])))
                 i = end + 1
             }
         }
@@ -385,9 +450,56 @@ enum BlockParser {
         line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// An opening or closing fence line: starts with three backticks.
-    private static func isFence(_ line: String) -> Bool {
-        line.hasPrefix("```")
+    // Marc: fences of either character with the CommonMark close rule; upstream took any line
+    // starting with ``` as an opening or closing fence.
+
+    /// A code fence: its character (`` ` `` or `~`) and run length.
+    struct CodeFence: Equatable {
+        let character: unichar
+        let length: Int
+    }
+
+    /// The fence a line opens: 3+ backticks or tildes at column 0. A backtick fence's info
+    /// string may not hold a backtick (that is inline code).
+    static func fenceOpening(_ line: String) -> CodeFence? {
+        let units = Array(line.utf16)
+        guard let first = units.first, first == 0x60 || first == 0x7E else { return nil }
+        var length = 0
+        while length < units.count, units[length] == first { length += 1 }
+        guard length >= 3 else { return nil }
+        if first == 0x60, units[length...].contains(0x60) { return nil }
+        return CodeFence(character: first, length: length)
+    }
+
+    /// A line that closes `fence`: at least as many of the same character, then only whitespace.
+    static func isFenceClose(_ line: String, _ fence: CodeFence) -> Bool {
+        let units = Array(line.utf16)
+        var length = 0
+        while length < units.count, units[length] == fence.character { length += 1 }
+        guard length >= fence.length else { return false }
+        return units[length...].allSatisfy { $0 == 0x20 || $0 == 0x09 || $0 == 0x0A || $0 == 0x0D }
+    }
+
+    /// A line of indented code: four spaces or a tab (after fewer spaces), and some content.
+    static func isIndentedCode(_ line: String) -> Bool {
+        var spaces = 0
+        for c in line.utf16 {
+            if c == 0x09 { return !isBlank(line) }
+            guard c == 0x20 else { return false }
+            spaces += 1
+            if spaces == 4 { return !isBlank(line) }
+        }
+        return false
+    }
+
+    /// The level of a setext underline: 1 for `===`, 2 for `---` (2+ characters, up to 3
+    /// spaces before, only whitespace after); nil for any other line.
+    static func setextLevel(_ line: String) -> Int? {
+        let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard t.count >= 2, let first = t.first, first == "=" || first == "-",
+              t.allSatisfy({ $0 == first }),
+              line.prefix(while: { $0 == " " }).count <= 3 else { return nil }
+        return first == "=" ? 1 : 2
     }
 
     /// `^\s*(-{3,}|\*{3,}|_{3,})\s*$` — a solid run of 3+ of one of `- * _`.

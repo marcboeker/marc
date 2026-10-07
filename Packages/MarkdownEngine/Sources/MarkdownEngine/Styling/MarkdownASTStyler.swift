@@ -85,7 +85,30 @@ enum MarkdownASTStyler {
         let linkRanges = collectLinkRanges(in: blocks)
         styleAutoLinks(ctx: ctx, codeRanges: codeRanges, linkRanges: linkRanges, into: &attrs)
         styleIncompleteLinkBrackets(ctx: ctx, codeRanges: codeRanges, checkboxRanges: checkboxRanges, into: &attrs)
+        styleHTMLComments(ctx: ctx, codeRanges: codeRanges, into: &attrs)
         return attrs
+    }
+
+    // Marc: new.
+    private static let htmlCommentPattern = regex(#"<!--[\s\S]*?-->"#, false)
+
+    /// `<!-- … -->` is a note to the writer, not text: dimmed, and without ligatures (`<!--`
+    /// and `-->` are arrows in fonts like JetBrains Mono).
+    private static func styleHTMLComments(ctx: Ctx, codeRanges: [NSRange], into attrs: inout [StyledRange]) {
+        guard let pattern = htmlCommentPattern, ctx.ns.range(of: "<!--").location != NSNotFound else { return }
+        // Fonts like JetBrains Mono draw the arrows with contextual alternates, not ligatures.
+        let plain = ctx.baseFont.fontDescriptor.addingAttributes([.featureSettings: [
+            [NSFontDescriptor.FeatureKey.typeIdentifier: kContextualAlternatesType,
+             NSFontDescriptor.FeatureKey.selectorIdentifier: kContextualAlternatesOffSelector],
+            [NSFontDescriptor.FeatureKey.typeIdentifier: kLigaturesType,
+             NSFontDescriptor.FeatureKey.selectorIdentifier: kCommonLigaturesOffSelector],
+        ]])
+        let font = NSFont(descriptor: plain, size: ctx.baseFont.pointSize) ?? ctx.baseFont
+        for scan in ctx.scanRanges {
+            for m in pattern.matches(in: ctx.text, options: [], range: scan) where !isInCode(m.range, codeRanges) {
+                attrs.append((m.range, [.foregroundColor: ctx.theme.disabledText, .font: font, .ligature: 0, .spellingState: 0]))
+            }
+        }
     }
 
     // MARK: - Text/regex-based passes (ported 1:1, AST-agnostic)
@@ -365,7 +388,10 @@ enum MarkdownASTStyler {
     }
 
     /// AST list-item decoration: indent paragraph, `•` bullet, checkbox + strikethrough, all caret-aware.
-    private static func styleListItem(_ item: ListItem, displayNumber: Int?, ctx: Ctx, into attrs: inout [StyledRange]) {
+    // Marc: `isLast` is new: only the last item of a list gets the paragraph spacing below.
+    private static func styleListItem(_ item: ListItem, displayNumber: Int?, isLast: Bool, ctx: Ctx,
+                                      into attrs: inout [StyledRange]) {
+        let spacingBelow = isLast ? ctx.baseParagraphSpacing : ctx.config.lists.itemSpacing ?? ctx.baseParagraphSpacing
         // `helpersEnabled` switches EDITING conveniences (auto-continue,
         // auto-indent, `- ` → `•`) — its own doc promises lists still render.
         // Returning here for every item also dropped the `.taskCheckbox`
@@ -434,7 +460,6 @@ enum MarkdownASTStyler {
             }
             return HeadingHelpers.textWidth(ctx.ns.substring(with: markerGroup), font: ctx.baseFont)
         }()
-        let depthIndent = CGFloat(MarkdownLists.indentLevel(from: ws)) * ctx.config.lists.indentPerLevel
         let ps = NSMutableParagraphStyle()
         guard helpers else {
             // Helpers off means NO list indent — but the box is drawn to the
@@ -453,7 +478,7 @@ enum MarkdownASTStyler {
                               + TaskCheckboxGeometry.gap - markerWidth)
             ps.minimumLineHeight = ctx.baseLineHeight + ctx.config.paragraph.lineHeightExtraSpacing
             ps.lineSpacing = 0
-            ps.paragraphSpacing = ctx.baseParagraphSpacing
+            ps.paragraphSpacing = spacingBelow
             ps.paragraphSpacingBefore = 0
             ps.lineBreakMode = .byWordWrapping
             ps.tabStops = (1...24).map {
@@ -472,17 +497,20 @@ enum MarkdownASTStyler {
         ps.minimumLineHeight = lineHeight
         ps.maximumLineHeight = lineHeight
         ps.lineSpacing = 0
-        ps.paragraphSpacing = ctx.baseParagraphSpacing
+        ps.paragraphSpacing = spacingBelow
         ps.paragraphSpacingBefore = 0
         ps.tabStops = []
         ps.defaultTabInterval = ctx.config.lists.indentPerLevel
-        ps.firstLineHeadIndent = ctx.config.lists.indentPerLevel
+        ps.firstLineHeadIndent = ctx.config.lists.markerIndent ?? ctx.config.lists.indentPerLevel // Marc: markerIndent
         // Wrapped lines hang under the first line's content (indent + marker
         // width). No checkbox-specific extra: the box is a drawn overlay that
         // doesn't change text advance, so adding it here (and only here, not to
         // firstLineHeadIndent) shifted an unchecked task's wrapped lines right
         // of its first line.
-        ps.headIndent = ctx.config.lists.indentPerLevel + depthIndent + markerWidth
+        // Marc: the indent is where the first line's text really starts: the source whitespace
+        // advances by its own width (a tab to the next tab stop). Upstream counted levels ×
+        // indentPerLevel, which missed the first line by the difference.
+        ps.headIndent = listIndentEnd(ws, ctx: ctx) + markerWidth
         attrs.append((line, [.paragraphStyle: ps]))
 
         // 2. Marker decoration (suppressed while the caret edits the syntax).
@@ -546,10 +574,12 @@ enum MarkdownASTStyler {
             attrs.append((postGap, [.foregroundColor: NSColor.clear, .font: ctx.inlineMarkerFont]))
         }
         if item.checked, NSMaxRange(item.range) > NSMaxRange(box) {
-            attrs.append((NSRange(location: NSMaxRange(box), length: NSMaxRange(item.range) - NSMaxRange(box)), [
+            var done: [NSAttributedString.Key: Any] = [
                 .strikethroughStyle: NSUnderlineStyle.single.rawValue,
                 .strikethroughColor: ctx.theme.strikethroughColor,
-            ]))
+            ]
+            if let ink = ctx.theme.taskDoneText { done[.foregroundColor] = ink } // Marc:
+            attrs.append((NSRange(location: NSMaxRange(box), length: NSMaxRange(item.range) - NSMaxRange(box)), done))
         }
     }
 
@@ -662,7 +692,8 @@ enum MarkdownASTStyler {
 
     private static func styleBlock(_ block: BlockNode, font: NSFont, ctx: Ctx, into attrs: inout [StyledRange]) {
         switch block {
-        case .paragraph(_, let inlines):
+        case .paragraph(let range, let inlines):
+            styleListContinuation(range: range, ctx: ctx, into: &attrs)
             styleInlines(inlines, font: font, ctx: ctx, into: &attrs)
 
         case .heading(let level, let range, let markers, let inlines):
@@ -678,8 +709,20 @@ enum MarkdownASTStyler {
             headingPara.paragraphSpacing = ctx.baseParagraphSpacing
             attrs.append((ctx.ns.paragraphRange(for: range), [.paragraphStyle: headingPara]))
             attrs.append((range, [.font: headingFont]))
+            if level >= ctx.config.headings.mutedFromLevel { // Marc:
+                attrs.append((range, [.foregroundColor: ctx.theme.mutedText]))
+            }
             for marker in markers {
                 attrs.append((marker, [.foregroundColor: ctx.theme.headingMarker]))
+            }
+            // Marc: a setext underline (its own line below the text) folds away while the
+            // caret is outside the heading, like `#` markers do.
+            if let underline = markers.first, underline.location > range.location, !ctx.isActive(range) {
+                let line = ctx.ns.paragraphRange(for: underline)
+                let folded = NSMutableParagraphStyle()
+                folded.minimumLineHeight = 0.1
+                folded.maximumLineHeight = 0.1
+                attrs.append((line, [.paragraphStyle: folded, .font: ctx.inlineMarkerFont, .foregroundColor: NSColor.clear]))
             }
             styleInlines(inlines, font: headingFont, ctx: ctx, into: &attrs)
 
@@ -687,10 +730,10 @@ enum MarkdownASTStyler {
             styleBlockquote(range: range, ctx: ctx, into: &attrs)
             styleInlines(inlines, font: font, ctx: ctx, into: &attrs)
 
-        case .list(_, let items):
+        case .list(let range, let items):
             for item in items {
                 styleListItem(item, displayNumber: ctx.orderedDisplayNumbers[item.marker.location],
-                              ctx: ctx, into: &attrs)
+                              isLast: NSMaxRange(item.range) >= NSMaxRange(range), ctx: ctx, into: &attrs)
                 styleInlines(item.inlines, font: font, ctx: ctx, into: &attrs)
             }
 
@@ -700,9 +743,90 @@ enum MarkdownASTStyler {
             styleThematicBreak(range: range, ctx: ctx, into: &attrs)
         case .ext(let node):
             styleExtensionBlock(node, font: font, ctx: ctx, into: &attrs)
-        case .blockLatex, .table, .blank:
+        case .blank(let range):
+            // Marc: blank lines between blocks are the gap, at the configured height.
+            if let height = ctx.config.paragraph.blankLineHeight {
+                let blank = NSMutableParagraphStyle()
+                blank.minimumLineHeight = height
+                blank.maximumLineHeight = height
+                for line in lines(of: range, ctx.ns) { attrs.append((line, [.paragraphStyle: blank])) }
+            }
+        case .blockLatex, .table:
             break   // NSImage rendering ported next
         }
+    }
+
+    // Marc: new.
+    /// An indented paragraph below a list item (after a blank line) continues that item: its
+    /// lines start at the item's content edge, and the source indent folds away.
+    private static func styleListContinuation(range: NSRange, ctx: Ctx, into attrs: inout [StyledRange]) {
+        guard range.length > 0, isIndent(ctx.ns.character(at: range.location)),
+              ctx.config.lists.helpersEnabled,
+              let item = listItemAbove(range.location, ctx.ns) else { return }
+        let contentX = listIndentEnd(item.indent, ctx: ctx) + HeadingHelpers.textWidth(item.marker, font: ctx.baseFont)
+        let ps = NSMutableParagraphStyle()
+        ps.minimumLineHeight = ctx.baseLineHeight + ctx.config.paragraph.lineHeightExtraSpacing
+        ps.lineSpacing = 0
+        ps.paragraphSpacing = ctx.baseParagraphSpacing
+        ps.lineBreakMode = .byWordWrapping
+        ps.firstLineHeadIndent = contentX
+        ps.headIndent = contentX
+        for line in lines(of: range, ctx.ns) {
+            attrs.append((line, [.paragraphStyle: ps]))
+            var indentEnd = line.location
+            while indentEnd < NSMaxRange(line), isIndent(ctx.ns.character(at: indentEnd)) { indentEnd += 1 }
+            let indent = NSRange(location: line.location, length: indentEnd - line.location)
+            if indent.length > 0, !ctx.isActive(indent) { shrink([indent], ctx: ctx, into: &attrs) }
+        }
+    }
+
+    /// The source lines of `range`, each with its line break.
+    private static func lines(of range: NSRange, _ ns: NSString) -> [NSRange] {
+        var lines: [NSRange] = []
+        var cursor = range.location
+        while cursor < NSMaxRange(range) {
+            let line = ns.lineRange(for: NSRange(location: cursor, length: 0))
+            lines.append(line)
+            cursor = NSMaxRange(line)
+        }
+        return lines
+    }
+
+    private static func isIndent(_ c: unichar) -> Bool { c == 0x20 || c == 0x09 }
+
+    /// Where a list line's marker starts: the list indent, then its source whitespace at its own
+    /// advance (a tab moves to the next tab stop, `defaultTabInterval` = `indentPerLevel`).
+    private static func listIndentEnd(_ ws: String, ctx: Ctx) -> CGFloat {
+        let step = ctx.config.lists.indentPerLevel
+        let space = HeadingHelpers.textWidth(" ", font: ctx.baseFont)
+        var x = ctx.config.lists.markerIndent ?? step
+        for c in ws {
+            x = c == "\t" ? (floor(x / step) + 1) * step : x + space
+        }
+        return x
+    }
+
+    /// The list item a continuation paragraph at `location` belongs to: up past blank lines and
+    /// other indented lines to a list-item line. Its leading whitespace and its marker with the
+    /// space after it (`- `, `1. `; a task's box folds away, so it counts as `- `).
+    private static func listItemAbove(_ location: Int, _ ns: NSString) -> (indent: String, marker: String)? {
+        var scan = ns.lineRange(for: NSRange(location: location, length: 0)).location
+        var steps = 0
+        while scan > 0, steps < 200 {
+            let line = ns.lineRange(for: NSRange(location: scan - 1, length: 0))
+            let text = ns.substring(with: line)
+            scan = line.location
+            steps += 1
+            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { continue }
+            if BlockParser.isListItem(text) {
+                let indent = String(text.prefix { $0 == " " || $0 == "\t" })
+                let rest = text.dropFirst(indent.count)
+                let marker = rest.prefix { !$0.isWhitespace }
+                return (indent, marker + " ")
+            }
+            guard let first = text.first, first == " " || first == "\t" else { return nil }
+        }
+        return nil
     }
 
     /// Extension fenced block: the extension supplies content ATTRIBUTES only;
@@ -781,6 +905,18 @@ enum MarkdownASTStyler {
         let indentPerLevel = MarkdownTextLayoutFragment.blockquoteIndentPerLevel
         let hasPanel = ctx.theme.blockquoteBackground != nil
         let padding = hasPanel ? ctx.config.blockquote.panelPadding : 0
+        // Marc: fenced code inside the quote (styled after the lines, so its ink wins).
+        let codeRuns = DocumentAST.quoteCodeRuns(range, ctx.ns)
+        defer { for run in codeRuns {
+            for quote in lines where NSLocationInRange(quote.line.location, run.range) && quote.contentRange.length > 0 {
+                attrs.append((quote.contentRange, [.font: ctx.codeFont, .foregroundColor: ctx.theme.bodyText, .spellingState: 0]))
+            }
+            let fenceAttrs: [NSAttributedString.Key: Any] = ctx.isActive(run.range)
+                ? [.foregroundColor: ctx.theme.mutedText]
+                : [.foregroundColor: NSColor.clear]
+            attrs.append((run.openFence, fenceAttrs))
+            attrs.append((run.closeFence, fenceAttrs))
+        } }
         for (n, quote) in lines.enumerated() {
             let previousLevel = n > 0 ? lines[n - 1].level : 0
             let nextLevel = n + 1 < lines.count ? lines[n + 1].level : 0
@@ -789,14 +925,35 @@ enum MarkdownASTStyler {
                 (previousLevel <= i ? BlockquoteEdge.top : 0) | (nextLevel <= i ? BlockquoteEdge.bottom : 0)
             }
 
-            let textIndent = CGFloat(quote.level) * indentPerLevel
+            // Marc: the bar hangs left of the text column, so the first level's text stays on
+            // the text edge (see MarkdownTextLayoutFragment.blockquotePanels).
+            let textIndent = CGFloat(quote.level - 1) * indentPerLevel
+            // Marc: a list item in a quote: `•` over its bullet, wrapped lines hang under its text.
+            let inCode = codeRuns.contains { NSLocationInRange(quote.line.location, $0.range) }
+            let content = ctx.ns.substring(with: quote.contentRange)
+            var hang: CGFloat = 0
+            var bullet: NSRange?
+            if !inCode, BlockParser.isListItem(content), let first = content.first, !first.isWhitespace {
+                let marker = String(content.prefix { !$0.isWhitespace }) + " "
+                hang = HeadingHelpers.textWidth(marker, font: ctx.baseFont)
+                let markerRange = NSRange(location: quote.contentRange.location, length: 1)
+                if "-*+".contains(first), !ctx.isActive(NSRange(location: markerRange.location, length: 2)) {
+                    bullet = markerRange
+                }
+            }
             let para = NSMutableParagraphStyle()
             para.firstLineHeadIndent = textIndent
-            para.headIndent = textIndent
+            para.headIndent = textIndent + hang
+            // A hidden fence line inside the quote folds to nothing, like a setext underline.
+            let foldedFence = codeRuns.contains { run in
+                !ctx.isActive(run.range)
+                    && (NSLocationInRange(run.openFence.location, quote.line) || NSLocationInRange(run.closeFence.location, quote.line))
+            }
             para.tailIndent = -padding
-            let lineHeight = ctx.baseLineHeight + ctx.config.blockquote.extraLineHeight
+            let lineHeight = foldedFence ? 0.1 : ctx.baseLineHeight + ctx.config.blockquote.extraLineHeight
             para.minimumLineHeight = lineHeight
             para.maximumLineHeight = lineHeight
+            if foldedFence { attrs.append((quote.line, [.font: ctx.inlineMarkerFont])) }
             // Inner quote lines stay tight (0); the first and last line make room for the panel
             // padding, and the LAST line also gets the normal paragraph spacing.
             para.paragraphSpacingBefore = n == 0 ? padding : 0
@@ -806,6 +963,7 @@ enum MarkdownASTStyler {
             if quote.contentRange.length > 0 {
                 attrs.append((quote.contentRange, [.foregroundColor: ctx.theme.blockquoteText]))
             }
+            if let bullet { attrs.append((bullet, [.bulletMarker: true, .foregroundColor: NSColor.clear])) }
             if ctx.isActive(quote.tokenRange) {
                 attrs.append((quote.markerRange, [.foregroundColor: ctx.theme.mutedText]))
             } else {
@@ -837,8 +995,41 @@ enum MarkdownASTStyler {
         let markerAttrs: [NSAttributedString.Key: Any] = ctx.isActive(range)
             ? [.foregroundColor: ctx.theme.mutedText, .font: ctx.codeFont]
             : [.foregroundColor: NSColor.clear, .font: ctx.codeFont]   // hiddenMarkerFont == codeFont
-        attrs.append((parts.openFence, markerAttrs))
-        attrs.append((parts.closeFence, markerAttrs))
+        if parts.openFence.length > 0 { attrs.append((parts.openFence, markerAttrs)) }
+        if parts.closeFence.length > 0 { attrs.append((parts.closeFence, markerAttrs)) }
+        // Marc: indented code has no fence lines to pad its slab: half a code line above and below.
+        if parts.openFence.length == 0, parts.content.length > 0 {
+            let firstLine = ctx.ns.lineRange(for: NSRange(location: parts.content.location, length: 0))
+            let lastLine = ctx.ns.lineRange(for: NSRange(location: NSMaxRange(parts.content) - 1, length: 0))
+            let pad = round(ctx.codeFont.pointSize * 0.75)
+            let first = ctx.codeParagraphStyle.mutableCopy() as! NSMutableParagraphStyle
+            first.paragraphSpacingBefore += pad
+            let last = ctx.codeParagraphStyle.mutableCopy() as! NSMutableParagraphStyle
+            last.paragraphSpacing += pad
+            if firstLine == lastLine { last.paragraphSpacingBefore += pad }
+            attrs.append((firstLine, [.paragraphStyle: first]))
+            attrs.append((lastLine, [.paragraphStyle: last]))
+        }
+        // Marc: indented code drops its 4-column indent while the caret is outside, so it lines
+        // up with the text like fenced code.
+        if parts.openFence.length == 0, !ctx.isActive(range) {
+            var cursor = parts.content.location
+            while cursor < NSMaxRange(parts.content) {
+                let line = ctx.ns.lineRange(for: NSRange(location: cursor, length: 0))
+                var i = line.location
+                var columns = 0
+                while i < NSMaxRange(line), columns < 4 {
+                    let c = ctx.ns.character(at: i)
+                    if c == 0x09 { columns = 4 } else if c == 0x20 { columns += 1 } else { break }
+                    i += 1
+                }
+                if i > line.location {
+                    attrs.append((NSRange(location: line.location, length: i - line.location),
+                                  [.foregroundColor: NSColor.clear, .font: ctx.inlineMarkerFont]))
+                }
+                cursor = NSMaxRange(line)
+            }
+        }
         // Marc: the fence hides its language, so the fragment shows it in the corner.
         if !ctx.isActive(range), let language = parts.language, !language.isEmpty, parts.openFence.length > 0 {
             attrs.append((NSRange(location: parts.openFence.location, length: 1), [.codeBlockLanguage: language]))
@@ -846,29 +1037,33 @@ enum MarkdownASTStyler {
     }
 
     /// Split a fenced-code range into open fence (+language), content, close fence, and language.
+    /// Marc: ``` and ~~~ fences of any length; indented code has empty fences and its whole
+    /// range (minus the last line break) as content.
     private static func codeBlockParts(_ range: NSRange, _ ns: NSString)
         -> (codeRange: NSRange, openFence: NSRange, content: NSRange, closeFence: NSRange, language: String?) {
         let start = range.location
         let end = NSMaxRange(range)
-        var openEnd = start
-        while openEnd < end, ns.character(at: openEnd) != 0x0A { openEnd += 1 }
-        if openEnd < end { openEnd += 1 }
-        let openFence = NSRange(location: start, length: openEnd - start)
+        let firstLine = NSIntersectionRange(ns.lineRange(for: NSRange(location: start, length: 0)), range)
+        guard let fence = BlockParser.fenceOpening(ns.substring(with: firstLine)) else {
+            var contentEnd = end
+            while contentEnd > start, ns.character(at: contentEnd - 1) == 0x0A || ns.character(at: contentEnd - 1) == 0x0D {
+                contentEnd -= 1
+            }
+            let content = NSRange(location: start, length: contentEnd - start)
+            return (content, NSRange(location: start, length: 0), content, NSRange(location: contentEnd, length: 0), nil)
+        }
+        let openFence = firstLine
 
         let lastLine = ns.lineRange(for: NSRange(location: max(start, end - 1), length: 0))
         var bt = lastLine.location
-        while bt < NSMaxRange(lastLine), ns.character(at: bt) == 0x60 { bt += 1 }
+        while bt < NSMaxRange(lastLine), ns.character(at: bt) == fence.character { bt += 1 }
         let closeFence = NSRange(location: lastLine.location, length: bt - lastLine.location)
         let codeRange = NSRange(location: start, length: NSMaxRange(closeFence) - start)
-        let content = NSRange(location: openEnd, length: max(0, lastLine.location - openEnd))
+        let content = NSRange(location: NSMaxRange(openFence), length: max(0, lastLine.location - NSMaxRange(openFence)))
 
-        var language: String?
-        if openFence.length > 3 {
-            let raw = ns.substring(with: NSRange(location: start + 3, length: openFence.length - 3))
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            language = raw.isEmpty ? nil : raw
-        }
-        return (codeRange, openFence, content, closeFence, language)
+        let info = ns.substring(with: NSRange(location: start + fence.length, length: openFence.length - fence.length))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (codeRange, openFence, content, closeFence, info.isEmpty ? nil : info)
     }
 
     // MARK: - Inlines (composing)
@@ -966,6 +1161,7 @@ enum MarkdownASTStyler {
                 attrs.append((textRange, [
                     .link: url,
                     .underlineStyle: NSUnderlineStyle.single.rawValue,
+                    .underlineColor: ctx.theme.linkUnderline ?? ctx.theme.link, // Marc:
                     .foregroundColor: ctx.theme.link,
                 ]))
             }
@@ -1045,8 +1241,19 @@ enum MarkdownASTStyler {
                 shrinkInlineMarkers(children, ctx: ctx, forceReveal: active, into: &attrs)
             case .wikiLink(let range, _, _, let markers):
                 if !(forceReveal || ctx.isActive(range)) { shrink(markers, ctx: ctx, into: &attrs) }
-            case .image(let range, _, _, let markers):
-                if !(forceReveal || ctx.isActive(range)) { shrink(markers, ctx: ctx, into: &attrs) }
+            case .image(let range, let alt, _, let markers):
+                if !(forceReveal || ctx.isActive(range)) {
+                    shrink(markers, ctx: ctx, into: &attrs)
+                    // Marc: the `(url "title")` run hides too, like a link's, unless there is no alt
+                    // text to stand for the image. A standalone image the token pass renders hides
+                    // all of this anyway.
+                    if alt.length > 0, markers.count >= 4 {
+                        let hide = NSRange(location: markers[2].location,
+                                           length: NSMaxRange(markers[3]) - markers[2].location)
+                        attrs.append((hide, [.font: ctx.inlineMarkerFont, .foregroundColor: NSColor.clear]))
+                        attrs.append((alt, [.foregroundColor: ctx.theme.mutedText]))
+                    }
+                }
             case .escape(let range, _, let marker):
                 if !(forceReveal || ctx.isActive(range)) { shrink([marker], ctx: ctx, into: &attrs) }
             case .text, .code, .imageEmbed, .inlineLatex:

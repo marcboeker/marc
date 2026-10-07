@@ -7,8 +7,18 @@ import cmark_gfm_extensions
 enum MarkdownHTML {
     /// GFM → HTML fragment: tables, ~~strikethrough~~, task lists, autolinks. Raw HTML is kept.
     /// With `sourcePositions` the elements carry `data-sourcepos="line:col-line:col"` (lines of `markdown`).
+    /// A fenced code block's `<pre>` carries its language as `data-lang`, for the corner label.
     static func render(_ markdown: String, sourcePositions: Bool = false) -> String {
-        parse(markdown, sourcePositions: sourcePositions) { document, render in render(document) } ?? ""
+        labelLanguages(parse(markdown, sourcePositions: sourcePositions) { document, render in render(document) } ?? "")
+    }
+
+    private static let codeLanguage = try! NSRegularExpression(pattern: #"<pre([^>]*)><code class="language-([^"]+)""#)
+
+    /// `<pre …><code class="language-x"` → `<pre … data-lang="x"><code class="language-x"`.
+    static func labelLanguages(_ html: String) -> String {
+        guard html.contains("class=\"language-") else { return html }
+        return codeLanguage.stringByReplacingMatches(in: html, range: NSRange(html.startIndex..., in: html),
+                                                     withTemplate: #"<pre$1 data-lang="$2"><code class="language-$2""#)
     }
 
     /// Parse `markdown` and pass its document node to `body`, with a function that renders a node to HTML.
@@ -51,25 +61,4 @@ enum MarkdownHTML {
         let named = family.map { "\"\($0.replacingOccurrences(of: "\"", with: ""))\", " } ?? ""
         return "\(named)-apple-system, sans-serif"
     }
-
-    /// The rules Print and Preview share. Each page sets the colours `--link`, `--rule`, `--fill` and
-    /// `--secondary`, and adds its own line heights, heading margins, code, pre and blockquote looks.
-    static let stylesheet = """
-    h1 { font-size: 1.8em; } h2 { font-size: 1.45em; } h3 { font-size: 1.2em; }
-    h4, h5, h6 { font-size: 1em; }
-    p, ul, ol, blockquote, pre, table { margin: 0 0 0.8em; }
-    ul, ol { padding-left: 1.6em; }
-    li > p { margin: 0; }
-    li:has(> input[type=checkbox]) { list-style: none; }
-    li > input[type=checkbox] { margin: 0 0.4em 0 -1.4em; }
-    a { color: var(--link); text-decoration: none; }
-    code, pre { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; }
-    pre code { background: none; padding: 0; font-size: 1em; }
-    hr { border: none; border-top: 1px solid var(--rule); margin: 1.4em 0; }
-    img { max-width: 100%; }
-    table { border-collapse: collapse; }
-    th, td { border: 1px solid var(--rule); padding: 0.3em 0.6em; }
-    th { background: var(--fill); }
-    del { color: var(--secondary); }
-    """
 }

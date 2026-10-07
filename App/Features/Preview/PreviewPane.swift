@@ -6,7 +6,7 @@ struct PreviewPane: View {
     let preview: PreviewController
     let text: String
     let folder: URL?
-    let style: PreviewStyle
+    let style: DocumentStyle
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +24,7 @@ private struct PreviewWebView: NSViewRepresentable {
     let preview: PreviewController
     let text: String
     let folder: URL?
-    let style: PreviewStyle
+    let style: DocumentStyle
 
     func makeNSView(context: Context) -> NSView {
         let container = NSView()

@@ -66,8 +66,8 @@ extension MarkdownStyler {
             + "\(ObjectIdentifier(theme.bodyText))|\(ObjectIdentifier(theme.mutedText))|"
             + "\(ObjectIdentifier(theme.highlightColor))|\(ObjectIdentifier(theme.inlineCodeBackground))|"
             + "\(theme.inlineCodeText.map { "\(ObjectIdentifier($0))" } ?? "-")|"
-            + "\(ObjectIdentifier(theme.tableBorder))|\(ObjectIdentifier(theme.tableHeaderBackground))|"
-            + "\(ObjectIdentifier(theme.tableStripeBackground))|"
+            + "\(ObjectIdentifier(theme.tableBorder))|\(theme.tableHeaderRule.map { "\(ObjectIdentifier($0))" } ?? "-")|"
+            + "\(ObjectIdentifier(theme.link))|"
             + "\(ObjectIdentifier(theme.latexLightModeText))|\(ObjectIdentifier(theme.latexDarkModeText))|"
             + "\(ObjectIdentifier(type(of: ctx.services.latex)))"
 
@@ -91,8 +91,8 @@ extension MarkdownStyler {
             colorKey(theme.inlineCodeBackground, under: appearance),
             theme.inlineCodeText.map { colorKey($0, under: appearance) } ?? "-",
             colorKey(theme.tableBorder, under: appearance),
-            colorKey(theme.tableHeaderBackground, under: appearance),
-            colorKey(theme.tableStripeBackground, under: appearance),
+            theme.tableHeaderRule.map { colorKey($0, under: appearance) } ?? "-",
+            colorKey(theme.link, under: appearance),
             colorKey(theme.latexLightModeText, under: appearance),
             colorKey(theme.latexDarkModeText, under: appearance),
             "\(ObjectIdentifier(type(of: ctx.services.latex)))",
@@ -396,7 +396,12 @@ extension MarkdownStyler {
         latex: any LatexRenderer,
         extensions: [any MarkdownExtension] = []
     ) -> NSAttributedString {
-        let descriptor = baseFont.fontDescriptor
+        // Marc: tabular digits, so numbers in a column line up.
+        let descriptor = baseFont.fontDescriptor.addingAttributes([.featureSettings: [[
+            NSFontDescriptor.FeatureKey.typeIdentifier: kNumberSpacingType,
+            NSFontDescriptor.FeatureKey.selectorIdentifier: kMonospacedNumbersSelector,
+        ]]])
+        let baseFont = NSFont(descriptor: descriptor, size: baseFont.pointSize) ?? baseFont
         let pointSize = baseFont.pointSize
         let codeFont = NSFont.monospacedSystemFont(ofSize: pointSize, weight: .regular)
         let startFont = header
@@ -503,9 +508,21 @@ extension MarkdownStyler {
                 } else {
                     appendPlain(range, font)   // renderer unavailable → keep raw `$…$`
                 }
-            case .link(let range, _, _, _, _),
-                 .image(let range, _, _, _),
-                 .wikiLink(let range, _, _, _),
+            // Marc: a link draws its text in link ink (the cell is an image, so it is not
+            // clickable), an image its alt text; upstream drew both raw.
+            case .link(_, let textRange, _, _, let children):
+                let start = out.length
+                if children.isEmpty { appendPlain(textRange, font) } else { recurse(children, font) }
+                out.addAttributes([.foregroundColor: theme.link, .underlineStyle: NSUnderlineStyle.single.rawValue],
+                                  range: NSRange(location: start, length: out.length - start))
+            case .image(let range, let alt, _, _):
+                if alt.length > 0 {
+                    out.append(NSAttributedString(string: ns.substring(with: alt),
+                                                  attributes: [.font: font, .foregroundColor: theme.mutedText]))
+                } else {
+                    appendPlain(range, font)
+                }
+            case .wikiLink(let range, _, _, _),
                  .imageEmbed(let range, _, _):
                 appendPlain(range, font)
             }
@@ -538,9 +555,11 @@ extension MarkdownStyler {
             return out
         }
         let borderColor = resolved(theme.tableBorder)
-        let headerFill = resolved(theme.tableHeaderBackground)
-        let stripeFill = resolved(theme.tableStripeBackground)
-        let cornerRadius: CGFloat = 6
+        let headerRule = resolved(theme.tableHeaderRule ?? theme.tableBorder)
+        // Marc: no card. The first column's text starts on the text edge and the last one's
+        // ends on the table's right edge; rows are separated by rules, not by an outline.
+        func padLeft(_ col: Int) -> CGFloat { col == 0 ? 0 : cellHPadding }
+        func padRight(_ col: Int) -> CGFloat { col == columnCount - 1 ? 0 : cellHPadding }
         let baseLineHeight: CGFloat = ceil(baseFont.ascender - baseFont.descender + baseFont.leading)
         let minColumnContentWidth: CGFloat = 16
 
@@ -622,8 +641,7 @@ extension MarkdownStyler {
         // - even the minimums don't fit (many-column tables) → columns stay at
         //   their minimums, the table renders wider than the container, and
         //   the horizontal-scroll overlay takes over as before.
-        let chrome = CGFloat(columnCount) * 2 * cellHPadding
-            + CGFloat(columnCount + 1) * borderWidth
+        let chrome = CGFloat(max(0, columnCount - 1)) * 2 * cellHPadding
         let contentAvailable = availableWidth - chrome
         let sumMax = maxWidths.reduce(0, +)
         let sumMin = minWidths.reduce(0, +)
@@ -659,22 +677,18 @@ extension MarkdownStyler {
             }
         }
 
-        let totalWidth = columnWidths.reduce(0, +)
-            + CGFloat(columnCount) * 2 * cellHPadding
-            + CGFloat(columnCount + 1) * borderWidth
+        let totalWidth = columnWidths.reduce(0, +) + chrome
         let totalHeight = rowContentHeights.reduce(0) { $0 + $1 + 2 * cellVPadding }
-            + CGFloat(rowCount + 1) * borderWidth
+            + CGFloat(rowCount) * borderWidth   // Marc: one rule below each row, none above the first
 
         let size = NSSize(width: totalWidth, height: totalHeight)
 
         // Pre-compute layout offsets (top-down coords; drawing runs flipped).
         var columnLeft = [CGFloat](repeating: 0, count: columnCount + 1)
-        columnLeft[0] = borderWidth
         for i in 0..<columnCount {
-            columnLeft[i + 1] = columnLeft[i] + columnWidths[i] + 2 * cellHPadding + borderWidth
+            columnLeft[i + 1] = columnLeft[i] + padLeft(i) + columnWidths[i] + padRight(i)
         }
         var rowTop = [CGFloat](repeating: 0, count: rowCount + 1)
-        rowTop[0] = borderWidth
         for i in 0..<rowCount {
             rowTop[i + 1] = rowTop[i] + rowContentHeights[i] + 2 * cellVPadding + borderWidth
         }
@@ -684,31 +698,16 @@ extension MarkdownStyler {
         // Flipped image so AppKit handles the y-flip; a manual transform mirror would flip glyphs too.
         return NSImage(size: size, flipped: true) { _ in
             // Marc: upstream drew a square outer border and column/row separator lines.
-            // A card: rounded outline, filled header, every second body row
-            // striped. Column and row gaps stay in the layout but draw nothing.
-            let card = NSRect(x: borderWidth / 2, y: borderWidth / 2,
-                              width: size.width - borderWidth, height: size.height - borderWidth)
-            let outline = NSBezierPath(roundedRect: card, xRadius: cornerRadius, yRadius: cornerRadius)
-
-            NSGraphicsContext.saveGraphicsState()
-            outline.addClip()
-            headerFill.setFill()
-            NSBezierPath(rect: NSRect(x: 0, y: 0, width: size.width, height: rowTop[1])).fill()
-            stripeFill.setFill()
-            for row in stride(from: 2, to: rowCount, by: 2) {
-                NSBezierPath(rect: NSRect(x: 0, y: rowTop[row], width: size.width,
-                                          height: rowTop[row + 1] - rowTop[row])).fill()
+            // Rules only: a stronger one under the header, hairlines under every body row.
+            for row in 1...rowCount {
+                (row == 1 ? headerRule : borderColor).setFill()
+                NSBezierPath(rect: NSRect(x: 0, y: rowTop[row] - borderWidth, width: size.width, height: borderWidth)).fill()
             }
-            NSGraphicsContext.restoreGraphicsState()
-
-            borderColor.setStroke()
-            outline.lineWidth = borderWidth
-            outline.stroke()
 
             func drawCell(_ s: NSAttributedString, col: Int, row: Int) {
                 guard col < columnCount else { return }
-                let cellLeft = columnLeft[col] + cellHPadding
-                let cellRight = columnLeft[col + 1] - borderWidth - cellHPadding
+                let cellLeft = columnLeft[col] + padLeft(col)
+                let cellRight = columnLeft[col + 1] - padRight(col)
                 let cellContentWidth = cellRight - cellLeft
                 // Align via NSParagraphStyle; word-wrap fills the row height
                 // measured above (long words fall back to character breaks).

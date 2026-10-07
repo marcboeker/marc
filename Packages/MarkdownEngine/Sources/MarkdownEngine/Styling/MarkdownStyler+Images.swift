@@ -37,7 +37,7 @@ extension MarkdownStyler {
                 continue
             }
             let urlRange = NSRange(location: urlStart, length: urlLength)
-            let url = ctx.nsText.substring(with: urlRange)
+            let url = imageSource(ctx.nsText.substring(with: urlRange))
             let isActive = ctx.activeTokenIndices.contains(idx)
 
             let request = EmbeddedImageRequest(name: url)
@@ -108,6 +108,16 @@ extension MarkdownStyler {
             }
         }
         return attrs
+    }
+
+    // Marc: new.
+    /// The file or URL in an image's `(…)`: without a `"title"` after it, and without `<>`.
+    static func imageSource(_ destination: String) -> String {
+        let trimmed = destination.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("<"), let close = trimmed.firstIndex(of: ">") {
+            return String(trimmed[trimmed.index(after: trimmed.startIndex)..<close])
+        }
+        return String(trimmed.prefix { !$0.isWhitespace })
     }
 
     // MARK: Image Embeds ![[Name]]
