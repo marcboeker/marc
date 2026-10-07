@@ -6,7 +6,13 @@
 
 A small Markdown window for the terminal. Type `marcdown notes.md`, and the file opens in a native macOS window with a live preview. Marcdown is a free macOS app.
 
-Marcdown has a very limited feature set, and it is very opinionated. It is mostly a graphical user interface that you control from the command line, and only then a Markdown editor. It is not a fully featured Markdown editor, and it will not become one.
+<p align="center">
+  <img src="assets/marcdown.gif" alt="Marcdown in use: a terminal command opens a Markdown file in a native window with live preview." width="720">
+</p>
+
+Marcdown is an opinionated Markdown editor, and that is why it is not called "Markdown". It is called Marcdown because it is my editor (I am Marc), and it follows my opinions about how Markdown should look and work. You do not have to share them. There are no settings to change them.
+
+Marcdown has a very limited feature set. It is mostly a graphical user interface that you control from the command line, and only then a Markdown editor. It is not a fully featured Markdown editor, and it will not become one.
 
 <p align="center">
   <img src="docs/marcdown.png" alt="Marcdown shows a pizza dough recipe with headings, lists, a quote, and tasks. Two small lint icons in the right margin mark a heading level jump and a broken link." width="480">

@@ -1,0 +1,478 @@
+<!doctype html>
+<!-- Marcdown promo animation. render(t) draws the frame at t seconds; render.mjs captures it.
+     Open with ?square for the 1080x1080 layout, ?flat for no background glow (GIF), add &play to watch it in a browser. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+:root {
+  --text: rgb(29, 29, 31); --secondary: rgb(107, 107, 112); --tertiary: rgb(148, 148, 154);
+  --link: rgb(10, 95, 194); --orange: rgb(255, 106, 26); --mark: rgba(255, 106, 26, 0.28);
+  --bg: #f6f4f1; --accent: #0a7aff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+body { font-family: -apple-system, system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+#stage { position: absolute; inset: 0; overflow: hidden;
+  background: radial-gradient(ellipse 60% 70% at 68% 50%, rgba(255, 140, 60, 0.10), transparent 70%), var(--bg); }
+body.flat #stage { background: var(--bg) !important; }
+body.square #stage { background: radial-gradient(ellipse 80% 60% at 50% 62%, rgba(255, 140, 60, 0.10), transparent 70%), var(--bg); }
+.abs { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform, opacity; }
+
+/* Intro and end card */
+#brand { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+.icon { width: 168px; height: 168px; border-radius: 38px; background: linear-gradient(rgb(255, 112, 0), rgb(255, 87, 0));
+  box-shadow: 0 18px 40px rgba(60, 30, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.35); display: grid; place-items: center; }
+.icon svg { width: 118px; height: 118px; }
+#name { font-size: 76px; font-weight: 700; letter-spacing: -0.02em; }
+#tagline { font-size: 34px; color: var(--secondary); font-weight: 500; letter-spacing: -0.01em; }
+
+/* Captions */
+#captions { width: 600px; }
+body.square #captions { width: 860px; }
+.cap { position: absolute; left: 0; top: 0; width: 100%; }
+.eyebrow { font-size: 22px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); margin-bottom: 18px; }
+.eyebrow span { color: var(--tertiary); margin-right: 14px; font-variant-numeric: tabular-nums; }
+.head { font-size: 62px; line-height: 1.08; font-weight: 700; letter-spacing: -0.025em; }
+body.square .eyebrow { font-size: 20px; margin-bottom: 14px; }
+body.square .head { font-size: 50px; }
+#dots { display: flex; gap: 10px; }
+#dots i { width: 34px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, 0.10); overflow: hidden; position: relative; }
+#dots i b { position: absolute; inset: 0; background: var(--orange); transform-origin: 0 50%; }
+body.square #dots i { width: 26px; }
+
+/* Window */
+#win { width: 1000px; height: 820px; background: #fff; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10), 0 30px 80px rgba(60, 30, 0, 0.16), 0 8px 24px rgba(0, 0, 0, 0.08); }
+.titlebar { height: 56px; display: flex; align-items: center; padding: 0 20px; gap: 10px; }
+.lights { display: flex; gap: 9px; }
+.lights i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15); }
+.lights i:nth-child(1) { background: #ff5f57; } .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+.sidebtn { margin-left: 14px; width: 40px; height: 32px; border-radius: 16px; display: grid; place-items: center;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.08); }
+.title { margin-left: 12px; font-size: 18px; font-weight: 600; }
+.title em { font-style: normal; font-weight: 400; color: var(--secondary); }
+
+.page { position: absolute; left: 0; right: 0; top: 56px; bottom: 0; padding: 26px 70px 0 64px; font-size: 22px; line-height: 31px; }
+.page .l { position: relative; white-space: pre; }
+.h1 { font-size: 39px; line-height: 50px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 16px; }
+.p { margin-bottom: 16px; }
+.h2 { font-size: 30px; line-height: 38px; font-weight: 700; margin-top: 26px; margin-bottom: 12px; }
+.h4 { font-weight: 700; margin-top: 26px; margin-bottom: 12px; }
+.li { padding-left: 36px; margin-bottom: 4px; }
+.li::before { content: "•"; position: absolute; left: 12px; color: var(--tertiary); }
+.ol { padding-left: 36px; margin-bottom: 4px; }
+.ol .n { position: absolute; left: 6px; color: var(--tertiary); }
+.mk { color: var(--tertiary); font-weight: 500; display: inline-block; overflow: hidden; vertical-align: bottom; }
+a { color: var(--link); text-decoration: underline; text-decoration-color: rgba(10, 95, 194, 0.4); text-underline-offset: 4px; }
+.caret { display: inline-block; width: 2px; height: 1.05em; background: var(--text); vertical-align: -0.15em; margin: 0 -1px; }
+.mo { position: relative; display: inline-block; border-radius: 5px; }
+.mo .b { position: absolute; left: 0; top: 0; }
+.hl { border-radius: 5px; }
+#src .l { font-weight: 400; }
+#src .s { color: var(--tertiary); }
+
+.lint { position: absolute; right: 22px; width: 22px; height: 22px; }
+.pop { position: absolute; right: 52px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 19px; background: #fff; border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10), 0 10px 30px rgba(0, 0, 0, 0.16); white-space: nowrap; }
+.pop::after { content: ""; position: absolute; right: -7px; top: 50%; width: 14px; height: 14px; background: #fff; transform: translateY(-50%) rotate(45deg);
+  box-shadow: 1px -1px 0 rgba(0, 0, 0, 0.08); }
+
+#launcher { position: absolute; left: 200px; top: 70px; width: 600px; border-radius: 14px; background: rgba(250, 250, 250, 0.96);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 20px 50px rgba(0, 0, 0, 0.22); overflow: hidden; transform-origin: 50% 0; }
+#launcher .q { font-size: 23px; padding: 16px 18px; border-bottom: 1px solid rgba(0, 0, 0, 0.10); }
+#launcher .q .ph { color: var(--tertiary); }
+#launcher .rows { padding: 7px; }
+#launcher .row { display: flex; justify-content: space-between; font-size: 19px; height: 36px; align-items: center; padding: 0 11px; border-radius: 7px; }
+#launcher .row .c, #launcher .row .k { color: var(--secondary); }
+#launcher .row.sel { background: var(--accent); color: #fff; }
+#launcher .row.sel .c, #launcher .row.sel .k { color: rgba(255, 255, 255, 0.8); }
+
+#capsule { position: absolute; left: 50%; bottom: 34px; padding: 10px 20px; font-size: 19px; border-radius: 30px; background: rgba(248, 248, 248, 0.97);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10), 0 6px 18px rgba(0, 0, 0, 0.14); white-space: nowrap; display: flex; gap: 9px; align-items: center; }
+
+/* Terminal */
+#term { width: 660px; height: 150px; border-radius: 14px; background: #1c1c1e; color: #ececec; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 24px 60px rgba(0, 0, 0, 0.28); font: 23px/34px ui-monospace, "SF Mono", Menlo, monospace; }
+#term .tb { height: 42px; display: flex; align-items: center; padding: 0 16px; position: relative; }
+#term .tb .t { position: absolute; left: 0; right: 0; text-align: center; font: 600 15px -apple-system, system-ui; color: #8e8e93; }
+#term .lights i { width: 12px; height: 12px; }
+#term .body { padding: 10px 22px; white-space: pre; }
+.pr { color: #8e8e93; } .pr b { color: var(--orange); font-weight: 400; }
+#term .caret { background: #ececec; width: 12px; height: 26px; vertical-align: -5px; margin: 0; }
+
+/* Print sheet */
+#sheet { width: 440px; height: 622px; background: #fff; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 30px 70px rgba(60, 30, 0, 0.22); overflow: hidden; }
+#sheet .page { top: 0; padding: 44px 44px; font-size: 12px; line-height: 17px; }
+#sheet .h1 { font-size: 22px; line-height: 28px; margin-bottom: 10px; }
+#sheet .p { margin-bottom: 9px; }
+#sheet .h2 { font-size: 16px; line-height: 21px; margin-top: 16px; margin-bottom: 7px; }
+#sheet .h4 { margin-top: 16px; margin-bottom: 7px; }
+#sheet .li, #sheet .ol { padding-left: 20px; margin-bottom: 2px; }
+#sheet .li::before { left: 7px; } #sheet .ol .n { left: 3px; }
+#sheet a { text-underline-offset: 2px; }
+#pdf { position: absolute; right: -18px; top: -18px; background: var(--orange); color: #fff; font-weight: 800; font-size: 26px; letter-spacing: 0.04em;
+  padding: 10px 18px; border-radius: 12px; box-shadow: 0 10px 24px rgba(60, 30, 0, 0.20); }
+#sheetwrap { width: 440px; height: 622px; }
+
+.key { display: flex; gap: 10px; }
+.key i { font-style: normal; min-width: 74px; height: 74px; padding: 0 18px; border-radius: 16px; background: #fff; display: grid; place-items: center;
+  font-size: 36px; font-weight: 500; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 4px 0 rgba(0, 0, 0, 0.10), 0 14px 30px rgba(0, 0, 0, 0.14); }
+#pointer { width: 30px; height: 44px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="brand">
+    <div class="icon" id="icon"><svg viewBox="200 180 624 664"><path fill="#fff" stroke="#fff" stroke-width="10" stroke-linejoin="round" d="M 262 798 L 262 226 L 402 226 L 512 470 L 622 226 L 762 226 L 762 798 L 640 798 L 640 452 L 548 660 L 476 660 L 384 452 L 384 798 Z"/></svg></div>
+    <div id="name">Marcdown</div>
+    <div id="tagline">Markdown, from your terminal.</div>
+  </div>
+
+  <div id="captions" class="abs"></div>
+  <div id="dots" class="abs"></div>
+
+  <div id="win" class="abs">
+    <div class="titlebar">
+      <div class="lights"><i></i><i></i><i></i></div>
+      <div class="sidebtn"><svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="#3a3a3c" stroke-width="1.7"><rect x="1" y="1" width="20" height="16" rx="4"/><path d="M8 1v16M3.8 5h2M3.8 8h2M3.8 11h2"/></svg></div>
+      <div class="title">Pizza.md<em id="edited"></em></div>
+    </div>
+
+    <div class="page" id="doc">
+      <div class="l h1">Pizza dough</div>
+      <div class="l p">A simple dough for <span class="mo hl" id="two"><span class="a">two</span><span class="b"></span></span> pizzas. Start <b>one day</b> before you bake.</div>
+      <div class="l h2">Ingredients</div>
+      <div class="l li">500 g flour, type <i>00</i></div>
+      <div class="l li"><span class="mo" id="water"><span class="a">325</span><span class="b">350</span></span> g water</div>
+      <div class="l li">10 g salt</div>
+      <div class="l" id="steps"><span class="mk" id="stepsMk"></span><span id="stepsTx"></span></div>
+      <div class="l ol" id="step1"><span class="n">1.</span>Mix the flour and the water.</div>
+      <div class="l ol"><span class="n">2.</span>Rest the dough for 24 hours.</div>
+      <div class="l h4" id="baking">Baking</div>
+      <div class="l p" id="sauce">See the <a>tomato sauce</a> for the topping.</div>
+      <div class="l p" id="appetito" style="overflow:hidden"><span class="hl" id="appetitoTx">Buon appetito!</span></div>
+    </div>
+
+    <div class="page" id="src">
+      <div class="l"><span class="s"># </span>Pizza dough</div>
+      <div class="l"> </div>
+      <div class="l">A simple dough for two pizzas. Start <span class="mo" data-to="**">__</span>one day<span class="mo" data-to="**">__</span> before you bake.</div>
+      <div class="l"> </div>
+      <div class="l"><span class="s">## </span>Ingredients</div>
+      <div class="l"> </div>
+      <div class="l"><span class="mo" data-to="-">*</span> 500 g flour, type <span class="mo" data-to="*">_</span>00<span class="mo" data-to="*">_</span></div>
+      <div class="l"><span class="mo" data-to="-">+</span> 325 g water</div>
+      <div class="l"><span class="mo" data-to="-">*</span> 10 g salt</div>
+      <div class="l"> </div>
+      <div class="l"><span class="s">## </span>Steps</div>
+      <div class="l"> </div>
+      <div class="l">1. Mix the flour and the water.</div>
+      <div class="l">2. Rest the dough for 24 hours.</div>
+      <div class="l"> </div>
+      <div class="l"><span class="s">#### </span>Baking</div>
+      <div class="l"> </div>
+      <div class="l">See the [tomato sauce](sauce.md) for the topping.</div>
+    </div>
+
+    <svg class="lint" id="lint1" viewBox="0 0 22 22"><path d="M11 2.2 20.6 19H1.4z" fill="var(--orange)" stroke="var(--orange)" stroke-width="2.4" stroke-linejoin="round"/><path d="M11 8v5.2" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><circle cx="11" cy="16.3" r="1.3" fill="#fff"/></svg>
+    <svg class="lint" id="lint2" viewBox="0 0 22 22"><path d="M11 2.2 20.6 19H1.4z" fill="var(--orange)" stroke="var(--orange)" stroke-width="2.4" stroke-linejoin="round"/><path d="M11 8v5.2" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><circle cx="11" cy="16.3" r="1.3" fill="#fff"/></svg>
+    <div class="pop" id="pop"><svg width="20" height="20" viewBox="0 0 22 22"><path d="M11 2.2 20.6 19H1.4z" fill="var(--orange)" stroke="var(--orange)" stroke-width="2.4" stroke-linejoin="round"/><path d="M11 8v5.2" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><circle cx="11" cy="16.3" r="1.3" fill="#fff"/></svg>Heading level jumps from H2 to H4.</div>
+
+    <div id="launcher">
+      <div class="q" id="lq"></div>
+      <div class="rows" id="lrows"></div>
+    </div>
+
+    <div id="capsule"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#28a745" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>Merged</div>
+  </div>
+
+  <div id="sheetwrap" class="abs">
+    <div id="sheet">
+      <div class="page">
+        <div class="l h1">Pizza dough</div>
+        <div class="l p">A simple dough for two pizzas. Start <b>one day</b> before you bake.</div>
+        <div class="l h2">Ingredients</div>
+        <div class="l li">500 g flour, type <i>00</i></div>
+        <div class="l li">325 g water</div>
+        <div class="l li">10 g salt</div>
+        <div class="l h2">Steps</div>
+        <div class="l ol"><span class="n">1.</span>Mix the flour and the water.</div>
+        <div class="l ol"><span class="n">2.</span>Rest the dough for 24 hours.</div>
+        <div class="l h4">Baking</div>
+        <div class="l p">See the <a>tomato sauce</a> for the topping.</div>
+      </div>
+    </div>
+    <div id="pdf">PDF</div>
+  </div>
+
+  <div id="term" class="abs">
+    <div class="tb"><div class="lights"><i></i><i></i><i></i></div><div class="t">~/recipes — zsh</div></div>
+    <div class="body" id="tbody"></div>
+  </div>
+
+  <div id="key" class="abs key"></div>
+  <svg id="pointer" class="abs" viewBox="0 0 30 44"><path d="M3 2v33l8-7.5 5.5 12.5 5.5-2.4-5.4-12.3H28z" fill="#111" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
+</div>
+
+<script>
+const square = new URLSearchParams(location.search).has('square');
+if (square) document.body.classList.add('square');
+// GIFs band on the soft glow, and it costs bytes: ?flat drops it.
+if (new URLSearchParams(location.search).has('flat')) document.body.classList.add('flat');
+const $ = id => document.getElementById(id);
+
+// ---- Timeline helpers ----
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const ease = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const out = p => 1 - Math.pow(1 - p, 3);
+const back = p => { const c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+/** Progress of t in [a, b], eased. */
+const seg = (t, a, b, f = ease) => f(clamp((t - a) / (b - a)));
+/** In over [a, a+d], out over [b, b+d]. */
+const span = (t, a, b, d = 0.2) => Math.min(seg(t, a, a + d, out), 1 - seg(t, b, b + d));
+const typed = (s, t, a, b) => s.slice(0, Math.round(clamp((t - a) / (b - a)) * s.length));
+const blink = t => (t % 1) < 0.55 ? 1 : 0;
+const css = (el, o) => Object.assign(el.style, o);
+const place = (el, x, y, s = 1, o = 1, r = 0) => css(el, { transform: `translate(${x}px, ${y}px) scale(${s}) rotate(${r}deg)`, opacity: o });
+
+// ---- Layout ----
+const L = square ? {
+  win: { x: 110, y: 270, s: 0.86 },
+  cap: { x: 110, y: 72 }, dots: { x: 110 + 860 - 8 * 36 + 10, y: 82 },
+  termCli: { x: 540 - 330 * 0.86, y: 640 - 75 * 0.86, s: 0.86 }, termDock: { x: 1080 - 568 - 40, y: 915, s: 0.86 },
+  sheet: { x: 540 - 220 * 0.9, y: 640 - 311 * 0.9, s: 0.9 },
+} : {
+  win: { x: 800, y: 130, s: 1 },
+  cap: { x: 130, y: 400 }, dots: { x: 130, y: 340 },
+  termCli: { x: 1300 - 330, y: 540 - 75, s: 1 }, termDock: { x: 150, y: 740, s: 1 },
+  sheet: { x: 1300 - 220, y: 540 - 311, s: 1 },
+};
+
+// ---- Captions ----
+const CAPS = [
+  [1.3, 'Command line', 'Open any file from the terminal.'],
+  [2.8, 'Live preview', 'Syntax hides while you type.'],
+  [4.4, 'Linter', 'Catches broken links and heading jumps.'],
+  [6.0, 'Formatter', 'One style on every save. No settings.'],
+  [7.6, 'Launcher', 'Every command, one shortcut away.'],
+  [9.2, 'Print & PDF', 'Prints the rendered document.'],
+  [10.8, 'Live reload', 'Follows changes from other programs.'],
+  [12.4, 'Merging', 'Merges outside changes with your edits.'],
+];
+const END = 14.0;
+const capEls = CAPS.map(([, eyebrow, head], i) => {
+  const el = document.createElement('div');
+  el.className = 'cap';
+  el.innerHTML = `<div class="eyebrow"><span>0${i + 1}</span>${eyebrow}</div><div class="head">${head}</div>`;
+  $('captions').append(el);
+  return el;
+});
+const dotEls = CAPS.map(() => { const i = document.createElement('i'); i.innerHTML = '<b></b>'; $('dots').append(i); return i.firstChild; });
+
+// ---- Launcher rows ----
+const ROWS_ALL = [['View: ', 'Preview', '⌃⌘P'], ['View: ', 'Side by Side', '⌥⌘P'], ['File: ', 'Export as PDF…', ''], ['Format: ', 'Bold', '⌘B'], ['File: ', 'tomato-sauce.md', '']];
+const ROWS_PRI = [['File: ', 'Print…', '⌘P'], ['View: ', 'Preview', '⌃⌘P']];
+const rowsHTML = rows => rows.map((r, i) => `<div class="row${i === 0 ? ' sel' : ''}"><div><span class="c">${r[0]}</span>${r[1]}</div><div class="k">${r[2]}</div></div>`).join('');
+
+// Source view morphs: wrap "from" and "to" glyphs.
+document.querySelectorAll('#src .mo').forEach(el => { el.innerHTML = `<span class="a">${el.textContent}</span><span class="b">${el.dataset.to}</span>`; });
+
+/** A swap from .a to .b: the old glyph goes up, the new one comes from below. */
+function morph(el, p, flash) {
+  const a = el.querySelector('.a'), b = el.querySelector('.b');
+  css(a, { opacity: p < 0.5 ? 1 - p * 2 : 0, transform: `translateY(${-p * 14}px)`, display: p < 0.5 ? 'inline' : 'none' });
+  css(b, { opacity: p < 0.5 ? 0 : p * 2 - 1, transform: `translateY(${(1 - p) * 14}px)`, position: p < 0.5 ? 'absolute' : 'static' });
+  el.style.background = `rgba(255, 106, 26, ${0.30 * flash})`;
+}
+
+const caret = document.createElement('span');
+caret.className = 'caret';
+const tcaret = document.createElement('span');
+tcaret.className = 'caret';
+
+function draw(t) {
+  // ---- Brand: intro, then end card ----
+  const introIn = seg(t, 0.05, 0.5, back), introOut = seg(t, 1.0, 1.3);
+  const endIn = seg(t, END + 0.25, END + 0.65, out);
+  const iconS = t < 7 ? lerp(0.5, 1, introIn) * lerp(1, 1.15, introOut) : lerp(0.6, 1, seg(t, END + 0.2, END + 0.6, back));
+  const brandO = t < 7 ? (1 - introOut) : endIn;
+  css($('icon'), { transform: `scale(${iconS})`, opacity: t < 7 ? Math.min(1, introIn * 2) * (1 - introOut) : brandO });
+  const nameIn = t < 7 ? seg(t, 0.3, 0.7, out) : seg(t, END + 0.35, END + 0.75, out);
+  const tagIn = t < 7 ? seg(t, 0.5, 0.9, out) : seg(t, END + 0.45, END + 0.85, out);
+  css($('name'), { opacity: nameIn * (t < 7 ? 1 - introOut : 1), transform: `translateY(${(1 - nameIn) * 20}px)` });
+  css($('tagline'), { opacity: tagIn * (t < 7 ? 1 - introOut : 1), transform: `translateY(${(1 - tagIn) * 20}px)` });
+
+  // ---- Everything else fades at the end ----
+  const fin = 1 - seg(t, END, END + 0.3);
+  const finS = lerp(0.97, 1, fin);
+
+  // ---- Captions and progress ----
+  capEls.forEach((el, i) => {
+    const a = CAPS[i][0], b = i < CAPS.length - 1 ? CAPS[i + 1][0] : END;
+    const pin = seg(t, a, a + 0.35, out), pout = seg(t, b - 0.05, b + 0.15);
+    css(el, { opacity: pin * (1 - pout), transform: `translateY(${(1 - pin) * 28 - pout * 18}px)` });
+  });
+  place($('captions'), L.cap.x, L.cap.y, 1, 1);
+  place($('dots'), L.dots.x, L.dots.y, 1, seg(t, 1.3, 1.6) * fin);
+  dotEls.forEach((b, i) => {
+    const a = CAPS[i][0], e = i < CAPS.length - 1 ? CAPS[i + 1][0] : END;
+    b.style.transform = `scaleX(${clamp((t - a) / (e - a))})`;
+  });
+
+  // ---- Terminal ----
+  const W = L.win;
+  const termIn = seg(t, 1.15, 1.45, out), termAway = seg(t, 2.25, 2.7);
+  const dockIn = seg(t, 10.85, 11.2, out);
+  let tx, ty, ts, to;
+  if (t < 6) {
+    tx = lerp(L.termCli.x, L.termCli.x - 120, termAway); ty = lerp(L.termCli.y + 30, L.termCli.y, termIn) + termAway * 60;
+    ts = L.termCli.s * lerp(0.94, 1, termIn); to = termIn * (1 - termAway);
+  } else {
+    tx = lerp(L.termDock.x - 80, L.termDock.x, dockIn); ty = L.termDock.y; ts = L.termDock.s; to = dockIn * fin;
+  }
+  place($('term'), tx, ty, ts, to);
+  const P = '<span class="pr">~/recipes <b>❯</b> </span>';
+  let lines;
+  if (t < 6) {
+    lines = [P + typed('marcdown pizza.md', t, 1.5, 1.95)];
+  } else {
+    const echo = typed(`echo "Buon appetito!" >> pizza.md`, t, 11.15, 11.75);
+    lines = [P + echo];
+    if (t >= 11.85) lines.push(P + typed(`sed -i '' s/325/350/ pizza.md`, t, 12.9, 13.35));
+  }
+  const tb = $('tbody');
+  tb.innerHTML = lines.join('\n');
+  const typing = (t > 1.5 && t < 1.95) || (t > 11.15 && t < 11.75) || (t > 12.9 && t < 13.35);
+  tcaret.style.opacity = typing ? 1 : blink(t);
+  tb.append(tcaret);
+
+  // ---- Window: grows out of the terminal ----
+  const grow = seg(t, 2.05, 2.6, back);
+  const growO = seg(t, 2.05, 2.25);
+  const tc = { x: L.termCli.x + 330 * L.termCli.s, y: L.termCli.y + 75 * L.termCli.s };
+  const s0 = 0.18;
+  const wx = lerp(tc.x - 500 * s0 * W.s, W.x, grow), wy = lerp(tc.y - 410 * s0 * W.s, W.y, grow);
+  const ws = lerp(s0, 1, grow) * W.s;
+  // Print: the window steps back while the sheet is in front.
+  const printDim = span(t, 9.0, 10.6, 0.3);
+  const cx = W.x + 500 * W.s, cy = W.y + 410 * W.s;
+  const sf = finS * lerp(1, 0.96, printDim);
+  place($('win'), cx + (wx - cx) * sf, cy + (wy - cy) * sf, ws * sf, growO * fin);
+  $('win').style.filter = printDim > 0 ? `saturate(${1 - printDim * 0.3}) brightness(${1 - printDim * 0.04})` : '';
+
+  // ---- Live view vs source view (formatter) ----
+  const srcO = span(t, 6.05, 7.4, 0.25);
+  css($('doc'), { opacity: 1 - srcO });
+  css($('src'), { opacity: srcO });
+
+  // Typing "## Steps", then the marker hides when the caret leaves the line.
+  const stepsStr = typed('## Steps', t, 2.95, 3.55);
+  const isHeading = stepsStr.length >= 3;
+  $('steps').className = 'l ' + (isHeading ? 'h2' : 'p');
+  if (!isHeading) { $('steps').style.margin = '0 0 4px'; } else { $('steps').style.margin = ''; }
+  const leave = seg(t, 3.75, 4.05);
+  const mkTxt = isHeading ? '## ' : stepsStr;
+  $('stepsMk').textContent = mkTxt;
+  css($('stepsMk'), { maxWidth: isHeading ? `${lerp(50, 0, leave)}px` : 'none', opacity: isHeading ? 1 - leave : 1 });
+  $('stepsTx').textContent = isHeading ? stepsStr.slice(3) : '';
+
+  // Caret position in the editor
+  caret.remove();
+  let caretOn = null;
+  if (t >= 2.6 && t < 3.75) caretOn = $('steps');
+  else if (t >= 3.75 && t < 4.4) caretOn = $('step1');
+  else if (t >= 12.45 && t < 13.4) caretOn = $('two').querySelector('.b');
+  if (caretOn) {
+    caretOn.append(caret);
+    caret.style.opacity = (t > 2.95 && t < 3.6) || (t > 12.55 && t < 12.9) ? 1 : blink(t);
+  }
+
+  // ---- Lint ----
+  const doc = $('doc'), page = doc.getBoundingClientRect();
+  const winScale = page.width / 1000 || 1;
+  const rowY = el => (el.getBoundingClientRect().top - $('win').getBoundingClientRect().top) / winScale + (el.getBoundingClientRect().height / winScale - 22) / 2;
+  const lintO = (1 - srcO) * fin;
+  const l1 = seg(t, 4.5, 4.8, back), l2 = seg(t, 4.6, 4.9, back);
+  css($('lint1'), { top: `${rowY($('baking'))}px`, transform: `scale(${l1})`, opacity: lintO * Math.min(1, l1 * 3) });
+  css($('lint2'), { top: `${rowY($('sauce'))}px`, transform: `scale(${l2})`, opacity: lintO * Math.min(1, l2 * 3) });
+  const popO = span(t, 5.2, 5.95, 0.2);
+  css($('pop'), { top: `${rowY($('baking')) - 12}px`, opacity: popO, transform: `translateX(${(1 - popO) * 10}px) scale(${lerp(0.95, 1, popO)})` });
+
+  // Pointer: to the first lint icon, click.
+  const ptrIn = span(t, 4.75, 5.8, 0.2);
+  const ptrMove = seg(t, 4.75, 5.15);
+  const win = $('win').getBoundingClientRect();
+  const icon = $('lint1').getBoundingClientRect();
+  const px = lerp(win.left + win.width * 0.7, icon.left + icon.width * 0.55, ptrMove);
+  const py = lerp(win.top + win.height * 0.92, icon.top + icon.height * 0.55, ptrMove);
+  const click = 1 - 0.15 * span(t, 5.15, 5.2, 0.05);
+  place($('pointer'), px, py, click * (square ? 0.86 : 1), ptrIn);
+
+  // ---- Formatter ----
+  const fmt = seg(t, 6.75, 7.05);
+  const flash = span(t, 6.75, 7.15, 0.15);
+  document.querySelectorAll('#src .mo').forEach((el, i) => morph(el, seg(t, 6.75 + i * 0.03, 7.0 + i * 0.03), flash));
+
+  // ---- Launcher ----
+  const lo = span(t, 7.8, 8.9, 0.15);
+  css($('launcher'), { opacity: lo, transform: `scale(${lerp(0.96, 1, lo)})`, display: lo > 0 ? 'block' : 'none' });
+  const q = typed('pri', t, 8.1, 8.45);
+  $('lq').innerHTML = q ? q + '<span class="caret"></span>' : '<span class="caret"></span><span class="ph">Search commands and files</span>';
+  $('lrows').innerHTML = rowsHTML(q.length >= 2 ? ROWS_PRI : ROWS_ALL);
+  if (q.length === 1) $('lrows').innerHTML = rowsHTML([ROWS_PRI[0], ['View: ', 'Preview', '⌃⌘P'], ['File: ', 'Export as PDF…', ''], ['File: ', 'Page Setup…', '⌥⇧⌘P']]);
+
+  // ---- Print sheet ----
+  const sIn = seg(t, 9.0, 9.5, out), sOut = seg(t, 10.45, 10.8);
+  const S = L.sheet;
+  place($('sheetwrap'), S.x + (square ? 0 : 40) * sIn, S.y + lerp(160, 0, sIn) - sOut * 120, S.s * lerp(0.7, 1, sIn), sIn * (1 - sOut), lerp(4, -3, sIn));
+  const pdf = seg(t, 9.75, 10.05, back);
+  css($('pdf'), { transform: `scale(${pdf}) rotate(6deg)`, opacity: Math.min(1, pdf * 3) });
+
+  // ---- Live reload: a new line from outside ----
+  const add = seg(t, 11.85, 12.1, out);
+  css($('appetito'), { height: `${add * 31}px`, marginBottom: `${add * 16}px`, opacity: add });
+  $('appetitoTx').style.background = `rgba(255, 106, 26, ${0.30 * span(t, 11.85, 12.45, 0.1) * (t < 12.45 ? 1 : 0)})`;
+  if (t >= 12.45) $('appetitoTx').style.background = `rgba(255, 106, 26, ${0.30 * (1 - seg(t, 12.45, 12.7))})`;
+
+  // ---- Merge: my edit, an outside edit, merged ----
+  const two = $('two');
+  const mine = typed('four', t, 12.6, 12.85);
+  const sel = t >= 12.45 && t < 12.6;
+  two.querySelector('.a').style.display = t < 12.6 ? 'inline' : 'none';
+  two.querySelector('.b').textContent = t < 12.6 ? '' : mine;
+  if (caretOn === two.querySelector('.b')) two.querySelector('.b').append(caret);
+  css(two.querySelector('.b'), { position: 'static' });
+  const merged = seg(t, 13.45, 13.65);
+  two.style.background = sel ? 'rgba(10, 122, 255, 0.22)' : `rgba(255, 106, 26, ${0.30 * merged})`;
+  $('edited').textContent = t >= 12.6 ? ' — Edited' : '';
+  morph($('water'), merged, merged);
+  const cap = span(t, 13.55, END + 0.5, 0.2);
+  css($('capsule'), { opacity: cap, transform: `translateX(-50%) translateY(${(1 - cap) * 14}px)` });
+
+  // ---- Keycaps ----
+  const keys = [[6.5, 6.95, ['⌘', 'S']], [7.65, 8.05, ['⇧', '⌘', 'P']], [8.6, 8.95, ['↩']]];
+  const k = keys.find(([a, b]) => t >= a && t < b + 0.2);
+  const key = $('key');
+  if (k) {
+    key.innerHTML = k[2].map(c => `<i>${c}</i>`).join('');
+    const p = span(t, k[0], k[1], 0.15);
+    const press = 1 - 0.06 * span(t, k[0] + 0.15, k[0] + 0.25, 0.05);
+    const kw = key.offsetWidth;
+    place(key, W.x + 500 * W.s - kw / 2, W.y + 820 * W.s - 140 + (1 - p) * 20, press, p);
+  } else css(key, { opacity: 0 });
+}
+/** The timeline is laid out in 15 s; DURATION stretches it. */
+const DURATION = 20;
+const render = t => draw(t * 15 / DURATION);
+window.render = render;
+
+if (new URLSearchParams(location.search).has('play')) {
+  const t0 = performance.now();
+  const loop = () => { render(((performance.now() - t0) / 1000) % (DURATION + 0.5)); requestAnimationFrame(loop); };
+  loop();
+} else render(0);
+</script>
+</body>
+</html>

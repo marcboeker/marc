@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "assets/promo/index.html"
+        ],
+        "createdAt": "2026-10-07T21:28:29.630Z",
+        "reason": "Claude: tertiary gray is the app's real Markdown-marker color (DocumentPalette.tertiary), recreated on purpose"
+      },
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          "assets/promo/index.html"
+        ],
+        "createdAt": "2026-10-07T21:28:29.648Z",
+        "reason": "Claude: window/terminal/sheet clip their content like real macOS windows; popovers are meant to stay inside"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "assets/promo/index.html"
+        ],
+        "createdAt": "2026-10-07T21:28:45.252Z",
+        "reason": "Claude: launcher, lint popover and merge capsule are recreations of real app overlays inside the app window"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "assets/promo/index.html"
+        ],
+        "createdAt": "2026-10-07T21:28:45.271Z",
+        "reason": "Claude: remaining zero-offset shadows are neutral black 1px hairline borders (window, terminal), not colored glows"
+      }
+    ]
+  }
+}
